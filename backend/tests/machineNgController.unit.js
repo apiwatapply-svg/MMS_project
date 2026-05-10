@@ -10,8 +10,6 @@ function run() {
             Total_Output: 100,
             All: 8,
             Visual_NG: "-",
-            Over_Reject: "-",
-            Over_Reject_Percent: "-",
         },
     };
 
@@ -23,11 +21,11 @@ function run() {
             quality: 97,
             oee_value: 90,
         },
-    ], "MC-01", "manual");
+    ], "MC-01", "auto");
 
     assert.strictEqual(dailyData["2026-05-10"].Visual_NG, 3);
-    assert.strictEqual(dailyData["2026-05-10"].Over_Reject, 5);
-    assert.strictEqual(dailyData["2026-05-10"].Over_Reject_Percent, 5);
+    assert.strictEqual(dailyData["2026-05-10"].Over_Reject, undefined);
+    assert.strictEqual(dailyData["2026-05-10"].Over_Reject_Percent, undefined);
 
     const untouched = {
         "2026-05-11": {
@@ -37,8 +35,6 @@ function run() {
             Total_Output: "-",
             All: 0,
             Visual_NG: "-",
-            Over_Reject: "-",
-            Over_Reject_Percent: "-",
         },
     };
     __private.applyVisualNgRows(untouched, [
@@ -49,8 +45,8 @@ function run() {
             quality: 0,
             oee_value: 0,
         },
-    ], "MC-01", "manual");
-    assert.strictEqual(untouched["2026-05-11"].Visual_NG, "-");
+    ], "MC-01", "auto");
+    assert.strictEqual(untouched["2026-05-11"].Visual_NG, 0);
 
     console.log("machineNgController.unit.js passed");
 }

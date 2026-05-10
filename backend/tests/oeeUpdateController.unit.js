@@ -23,7 +23,7 @@ function run() {
     ]);
 
     assert.strictEqual(payload.shiftDate, "2026-05-10");
-    assert.strictEqual(payload.machines["MC-01"].daily.oeeMode, "manual");
+    assert.strictEqual(payload.machines["MC-01"].daily.oeeMode, "auto");
     assert.strictEqual(payload.machines["MC-01"].daily.ngQty, 4);
 
     console.log("oeeUpdateController.unit.js passed");

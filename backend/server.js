@@ -181,9 +181,6 @@ app.post("/api/holiday/copy", holidayController.copyHolidays);
 // =========================================
 app.get("/api/oee-update/list", oeeUpdateController.list);
 app.post("/api/oee-update/set-mode", oeeUpdateController.setMode);
-app.post("/api/oee-update/manual-ng", oeeUpdateController.manualNg);
-app.post("/api/oee-update/manual-ng-batch", oeeUpdateController.manualNgBatch);
-app.post("/api/oee-update/manual-ng-multi-machine", oeeUpdateController.manualNgMultiMachine);
 app.get("/api/oee-update/history/:machine", oeeUpdateController.history);
 app.get("/api/oee-update/auto-ng/:machine", oeeUpdateController.autoNg);
 // =========================================

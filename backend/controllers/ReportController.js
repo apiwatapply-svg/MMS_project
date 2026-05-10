@@ -73,7 +73,7 @@ module.exports = {
                 prisma.tb_machine_ng.findMany({ where: whereClause }),
                 prisma.tb_availability_actual.findMany({ where: whereClause }),
             ]);
-            const modeMap = new Map(configs.map(c => [c.machine_name, c.oee_mode || "manual"]));
+            const modeMap = new Map(configs.map(c => [c.machine_name, "auto"]));
             const actualRowsByMachineDate = groupActualRowsByMachineAndDate(
                 actuals,
                 (date) => dayjs(date).format("YYYY-MM-DD")
@@ -197,7 +197,7 @@ module.exports = {
                     machine_type: machine.machine_type || "Unknown",
                     model_info: modelInfo,
                     daily_data: dailyData,
-                    oee_mode: modeMap.get(mName) || "manual",
+                    oee_mode: modeMap.get(mName) || "auto",
                     ng_mode: ngMode,
                     holidays: holidays
                         .filter(h => h.machine_name === mName)

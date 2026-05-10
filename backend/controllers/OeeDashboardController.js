@@ -164,11 +164,7 @@ module.exports = {
             let endOfTargetDay = new Date(targetDate);
 
             // ✅ Check if machine is manual
-            const config = await prisma.tb_machine_plan_config.findUnique({
-                where: { machine_name },
-                select: { oee_mode: true }
-            });
-            const isManual = config && config.oee_mode === "manual";
+            const isManual = false;
             
             const serverTodayStr = getShiftDateUTC();
             const serverToday = new Date(serverTodayStr);
@@ -353,11 +349,7 @@ module.exports = {
             let endOfTargetDay = new Date(targetDate);
 
             // ✅ Check if machine is manual
-            const machineConfig = await prisma.tb_machine_plan_config.findUnique({
-                where: { machine_name },
-                select: { oee_mode: true }
-            });
-            const isManual = machineConfig && machineConfig.oee_mode === "manual";
+            const isManual = false;
             
             const serverTodayStrTable = getShiftDateUTC();
             const serverTodayTable = new Date(serverTodayStrTable);

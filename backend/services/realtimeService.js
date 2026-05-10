@@ -35,7 +35,7 @@ const lastEmittedData = new Map(); // key: machineName, value: { output, cycleTi
 const lastAutoEmittedData = new Map(); // 🆕 Track auto machine OEE changes
 let lastOeeUpsertTime = 0; // 🆕 Throttle MSSQL writes
 
-let machineModeCache = new Map(); // 🆕 Cached machine modes (auto/manual)
+let machineModeCache = new Map(); // Cached machine modes. MMS uses auto NG/OEE for every machine.
 let sharedMcRecordsCache = {};    // 🆕 Shared MCStatus records between slow and fast loop
 let autoNgCache = {
     data: {},              // current hour NG (จาก InfluxDB current hour)
@@ -59,9 +59,9 @@ function startRealtimePolling(_emitFn, _broadcastFn) {
     // 🆕 ข้อมูล Mode เครื่องจักร (อัปเดตทุกๆ 2 นาทีโดยไม่กวนลูปความเร็วสูง)
     async function refreshModeCache() {
         try {
-            const configs = await prisma.tb_machine_plan_config.findMany({ select: { machine_name: true, oee_mode: true } });
+            const configs = await prisma.tb_machine_plan_config.findMany({ select: { machine_name: true } });
             machineModeCache = new Map(configs.map(c => {
-                return [c.machine_name, { oee_mode: c.oee_mode || "manual", ng_mode: "visual_ng" }];
+                return [c.machine_name, { oee_mode: "auto", ng_mode: "visual_ng" }];
             }));
         } catch(e) {}
         modeCacheTimer = setTimeout(refreshModeCache, 120000);
@@ -450,7 +450,7 @@ async function fastPollAndEmit() {
             // 🆕 [Phase 3] Auto Machine Real-Time OEE Calculation using In-Memory Stopwatch
             // ใช้ memoryOeeService.getDurationsNow() แทน calcMcStatusDurations() จาก MSSQL Cache
             // → A/P/Q/OEE อัปเดตทุก 2 วินาทีโดยไม่ Query MSSQL
-            const mCacheConfig = machineModeCache.get(machineName) || {};
+            const mCacheConfig = machineModeCache.get(machineName) || { oee_mode: "auto" };
             if (mCacheConfig.oee_mode === "auto") {
                 const memOeeService = require('./memoryOeeService');
                 // ✅ [Bug Fix] ส่ง now (UTC ms) ตรงๆ — ไม่บวก +7h
@@ -710,10 +710,8 @@ async function _slowPollAndEmitInner() {
             const availability = calcAvailability(runTimeSeconds, excludedSeconds, totalSeconds);
             let performance = calcPerformance(totalOutput, idealCT, runTimeSeconds);
 
-            // Quality & OEE — แยกตาม oee_mode (auto/manual)
-            const oeeData = oeeByMachine[machineName];
-            const mCacheConfig = modeMap.get(machineName) || { oee_mode: "manual", ng_mode: "visual_ng" };
-            const mode = mCacheConfig.oee_mode;
+            // Quality & OEE — auto NG for every machine.
+            const mode = "auto";
 
             let quality = 0;
             let oeeValue = 0;
@@ -752,11 +750,8 @@ async function _slowPollAndEmitInner() {
             };
 
             // ✅ For manual machines, prevent overwriting yesterday's OEE with today's incomplete OEE
-            const todayStr = getShiftDateUTC();
-            if (mode === "auto" || dateStr !== todayStr) {
-                dailyPayload.quality = parseFloat(quality.toFixed(2));
-                dailyPayload.oee = parseFloat(oeeValue.toFixed(2));
-            }
+            dailyPayload.quality = parseFloat(quality.toFixed(2));
+            dailyPayload.oee = parseFloat(oeeValue.toFixed(2));
 
             // 🆕 ซิงค์ MQTT Memory กลับจาก DB ถ้า live_status ยังเป็น null
             // (กรณี backend เพิ่งรีสตาร์ท ยังไม่ได้รับ MQTT status_tb ครั้งแรก)
@@ -783,11 +778,9 @@ async function _slowPollAndEmitInner() {
                 availability: parseFloat(availability.toFixed(2)),
                 performance: parseFloat(performance.toFixed(2)),
             };
-            if (mode === "auto") {
-                upsertData.ng_qty = ngQty;
-                upsertData.quality = parseFloat(quality.toFixed(2));
-                upsertData.oee_value = parseFloat(oeeValue.toFixed(2));
-            }
+            upsertData.ng_qty = ngQty;
+            upsertData.quality = parseFloat(quality.toFixed(2));
+            upsertData.oee_value = parseFloat(oeeValue.toFixed(2));
 
             // ✅ Write to DB at most once every 30 seconds to prevent huge disk I/O when running at 2s interval
             if (now.getTime() - lastOeeUpsertTime >= 30000) {
@@ -800,9 +793,9 @@ async function _slowPollAndEmitInner() {
                             machine_name: machineName,
                             availability: parseFloat(availability.toFixed(2)),
                             performance: parseFloat(performance.toFixed(2)),
-                            ng_qty: mode === "auto" ? ngQty : 0,
-                            quality: mode === "auto" ? parseFloat(quality.toFixed(2)) : 0,
-                            oee_value: mode === "auto" ? parseFloat(oeeValue.toFixed(2)) : 0,
+                            ng_qty: ngQty,
+                            quality: parseFloat(quality.toFixed(2)),
+                            oee_value: parseFloat(oeeValue.toFixed(2)),
                         },
                     }).catch(err => console.error(`   ❌ Slow poll upsert tb_oee failed for ${machineName}:`, err.message))
                 );

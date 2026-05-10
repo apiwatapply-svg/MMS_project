@@ -48,7 +48,6 @@ type RealtimeDailyPayload = {
     quality?: number;
     oee?: number;
     ngQty?: number;
-    over_reject_qty?: number;
 };
 type RealtimePayload = {
     shiftDate?: string;
@@ -143,16 +142,10 @@ function MachineReportPage() {
                 const updatedDailyData = { ...machine.daily_data };
                 const existing = updatedDailyData[shiftDate] || {};
                 const newMachineOut = socketData.daily.totalOutput || 0;
-                let newOutActual = newMachineOut;
-
-                if (existing.over_reject_qty !== undefined) {
-                    newOutActual = Math.max(0, newMachineOut - Number(existing.over_reject_qty || 0));
-                }
-
                 updatedDailyData[shiftDate] = {
                     ...existing,
                     machine_output_actual: newMachineOut,
-                    output_actual: newOutActual,
+                    output_actual: newMachineOut,
                     eff_actual: socketData.daily.overallEfficiency,
                     cycle_actual: socketData.daily.avgCycleTime,
                     ...(socketData.daily.availability !== undefined && { availability: socketData.daily.availability }),
@@ -186,7 +179,6 @@ function MachineReportPage() {
                     ...(socketData.daily.performance !== undefined && socketData.daily.performance > 0 && { performance: socketData.daily.performance }),
                     ...(isAuto ? {
                         ng_qty: socketData.daily.ngQty ?? 0,
-                        over_reject_qty: socketData.daily.over_reject_qty,
                         ...((socketData.daily.quality || 0) > 0 && { quality: socketData.daily.quality }),
                         ...((socketData.daily.oee || 0) > 0 && { oee: socketData.daily.oee }),
                     } : {}),
@@ -306,13 +298,13 @@ function MachineReportPage() {
         });
 
         groups.forEach(g => {
-            g.ng_mode = g.machines[0]?.ng_mode || "visual_ng";
+            g.ng_mode = "visual_ng";
             const summaryData: Record<string, MachineDailyData> = {};
             for (let d = 1; d <= 31; d++) {
                 const dateKey = `${selectedMonth}-${String(d).padStart(2, '0')}`;
                 const dayData: MachineDailyData = { has_production: false };
                 
-                const rowsKeys = ["output_target", "machine_output_actual", "output_actual", "eff_target", "eff_actual", "cycle_target", "cycle_actual", "over_reject_qty", "ng_qty", "availability", "performance", "quality", "oee"];
+                const rowsKeys = ["output_target", "machine_output_actual", "output_actual", "eff_target", "eff_actual", "cycle_target", "cycle_actual", "ng_qty", "availability", "performance", "quality", "oee"];
                 rowsKeys.forEach(key => {
                     let sum = 0, countForAverage = 0, totalCount = 0;
                     g.machines.forEach((m) => {
@@ -339,7 +331,7 @@ function MachineReportPage() {
                         }
                     });
 
-                    if (["output_actual", "machine_output_actual", "output_target", "ng_qty", "over_reject_qty"].includes(key)) {
+                    if (["output_actual", "machine_output_actual", "output_target", "ng_qty"].includes(key)) {
                         dayData[key] = sum > 0 ? sum : "-";
                     } else if (["eff_target", "cycle_target"].includes(key)) {
                         dayData[key] = totalCount > 0 ? (sum / totalCount) : "-";
@@ -385,22 +377,9 @@ function MachineReportPage() {
         let currentRowIndex = 5; // Start after summary (4 rows) and header (1 row) -> Index 5
 
         groupedReportData.forEach((group) => {
-            const mNgMode = group.ng_mode || "visual_ng";
-            const rowsTemplate = mNgMode === "over_reject" ? [
+            const rowsTemplate = [
                 { label: "Output (Target)", key: "output_target", isPercent: false },
                 { label: "Machine Output", key: "machine_output_actual", isPercent: false },
-                { label: "Output", key: "output_actual", isPercent: false },
-                { label: "Availability (Target)", key: "eff_target", isPercent: true },
-                { label: "Cycle time (Target)", key: "cycle_target", isPercent: false },
-                { label: "Cycle time", key: "cycle_actual", isPercent: false },
-                { label: "Over Reject", key: "over_reject_qty", isPercent: false },
-                { label: "NG Qty", key: "ng_qty", isPercent: false },
-                { label: "Availability", key: "availability", isPercent: true },
-                { label: "Performance", key: "performance", isPercent: true },
-                { label: "Quality", key: "quality", isPercent: true },
-                { label: "OEE", key: "oee", isPercent: true },
-            ] : [
-                { label: "Output (Target)", key: "output_target", isPercent: false },
                 { label: "Output", key: "output_actual", isPercent: false },
                 { label: "Availability (Target)", key: "eff_target", isPercent: true },
                 { label: "Cycle time (Target)", key: "cycle_target", isPercent: false },
@@ -608,7 +587,7 @@ function MachineReportPage() {
         if (key.includes("target") && key !== "output_target") {
             return latestTarget > 0 ? latestTarget : "-";
         }
-        if (["output_actual", "machine_output_actual", "ng_qty", "over_reject_qty", "output_target"].includes(key)) {
+        if (["output_actual", "machine_output_actual", "ng_qty", "output_target"].includes(key)) {
             return sum > 0 ? sum : "-";
         }
         if (count > 0) {
@@ -723,22 +702,9 @@ function MachineReportPage() {
                             </thead>
                             <tbody>
                                 {groupedReportData.map((group, gIdx) => {
-                                    const mNgMode = group.ng_mode || "visual_ng";
-                                    const rows = mNgMode === "over_reject" ? [
+                                    const rows = [
                                         { label: "Output (Target)", key: "output_target", isPercent: false, showZero: true },
                                         { label: "Machine Output", key: "machine_output_actual", isPercent: false, showZero: true },
-                                        { label: "Output", key: "output_actual", isPercent: false, showZero: true },
-                                        { label: "Availability (Target)", key: "eff_target", isPercent: true, showZero: true },
-                                        { label: "Cycle time (Target)", key: "cycle_target", isPercent: false, showZero: true },
-                                        { label: "Cycle time", key: "cycle_actual", isPercent: false, showZero: true },
-                                        { label: "Over Reject", key: "over_reject_qty", isPercent: false, showZero: true },
-                                        { label: "NG Qty", key: "ng_qty", isPercent: false, showZero: true },
-                                        { label: "Availability", key: "availability", isPercent: true, showZero: true },
-                                        { label: "Performance", key: "performance", isPercent: true, showZero: true },
-                                        { label: "Quality", key: "quality", isPercent: true, showZero: true },
-                                        { label: "OEE", key: "oee", isPercent: true, showZero: true }
-                                    ] : [
-                                        { label: "Output (Target)", key: "output_target", isPercent: false, showZero: true },
                                         { label: "Output", key: "output_actual", isPercent: false, showZero: true },
                                         { label: "Availability (Target)", key: "eff_target", isPercent: true, showZero: true },
                                         { label: "Cycle time (Target)", key: "cycle_target", isPercent: false, showZero: true },
@@ -791,14 +757,9 @@ function MachineReportPage() {
                                                                     ...(futureDay ? {} : holiday ? { backgroundColor: "#ffcccc" } : dayEmpty ? { backgroundColor: "#ffcccc" } : {})
                                                                 };
 
-                                                                const isManualToday = machine.oee_mode !== "auto" && dateKey === dayjs.utc().format("YYYY-MM-DD");
-                                                                const hideOeeFields = isManualToday && ["ng_qty", "quality", "oee"].includes(row.key);
-
                                                                 let cellContent: string | React.ReactNode;
                                                                 if (futureDay) {
                                                                     cellContent = "\u00A0";
-                                                                } else if (hideOeeFields) {
-                                                                    cellContent = "-";
                                                                 } else if (holiday) {
                                                                     if (row.key === "output_actual" && Number(val || 0) > 0) {
                                                                         cellContent = renderCell(val, row.isPercent);

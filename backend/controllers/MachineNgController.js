@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const dayjs = require("dayjs");
 
-const { getNgMode, sumHourlyFields, calcRejectSummary } = require("../services/oeeCalcService");
+const { getNgMode, sumHourlyFields } = require("../services/oeeCalcService");
 
 function applyVisualNgRows(dailyData, oeeRows, machineName, oeeMode) {
     oeeRows.filter(o => o.machine_name === machineName).forEach(o => {
@@ -14,18 +14,7 @@ function applyVisualNgRows(dailyData, oeeRows, machineName, oeeMode) {
 
         if (visualNg === null || visualNg === undefined) return;
 
-        const userHasNotUpdated = oeeMode === 'manual' && visualNg === 0 && o.quality === 0 && o.oee_value === 0;
-        if (userHasNotUpdated) {
-            dailyData[key].Visual_NG = "-";
-            return;
-        }
-
         dailyData[key].Visual_NG = visualNg;
-        const overReject = Math.max(0, dailyData[key].All - visualNg);
-        dailyData[key].Over_Reject = overReject;
-
-        const totalOutput = dailyData[key].Total_Output !== "-" ? dailyData[key].Total_Output : 0;
-        dailyData[key].Over_Reject_Percent = calcRejectSummary(totalOutput, overReject).rejectPercent;
         dailyData[key].Machine_Output = dailyData[key].Total_Output;
     });
 }
@@ -88,7 +77,7 @@ const controller = {
                 }),
             ]);
             
-            const modeMap = new Map(configs.map(c => [c.machine_name, c.oee_mode || "manual"]));
+                const modeMap = new Map(configs.map(c => [c.machine_name, "auto"]));
 
             // Organize stations by machine — key by station_id for FK lookups
             const stationMap = {};
@@ -137,9 +126,7 @@ const controller = {
                          Machine_Output: "-",
                          Total_Output: "-",
                          All: 0,
-                         Visual_NG: "-",
-                         Over_Reject: "-",
-                         Over_Reject_Percent: "-"
+                         Visual_NG: "-"
                      };
                      // Pre-fill stations with 0
                      mStationNames.forEach(name => dailyData[key].stations[name] = 0);

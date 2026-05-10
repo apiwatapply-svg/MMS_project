@@ -1407,7 +1407,7 @@ async function upsertOeeHourly() {
         const targetMap = {};
         for (const row of allTargetRows) targetMap[row.machine_name] = row;
 
-        // ✅ Bulk fetch NG (for over_reject logic)
+        // ✅ Bulk fetch NG for auto quality calculation.
         const allNgRows = await prisma.tb_machine_ng.findMany({ where: { date: targetDate } });
         const ngMap = {};
         for (const row of allNgRows) {
@@ -1485,13 +1485,8 @@ async function upsertOeeHourly() {
                 const availability = calcAvailability(runTimeSeconds, excludedSeconds, totalActiveSeconds);
                 const idealCT = targetRow?.cycle_time_target || 0;
                 
-                // 🆕 ABR ng logic (over_reject): update effective output for performance
-                let effectiveOutputForPerf = totalOutput;
-                if (ngMode === "over_reject") {
-                    const sumNg = ngMap[machineName] || 0;
-                    effectiveOutputForPerf = Math.max(0, totalOutput - sumNg);
-                }
-                const performance = calcPerformance(effectiveOutputForPerf, idealCT, runTimeSeconds);
+                // NG affects quality only; performance uses total machine output.
+                const performance = calcPerformance(totalOutput, idealCT, runTimeSeconds);
 
                 // 🆕 Fetch existing OEE to get the saved ng_qty
                 const existingOee = await prisma.tb_oee.findFirst({
@@ -1503,9 +1498,7 @@ async function upsertOeeHourly() {
                 let quality = 0;
                 let oeeValue = 0;
                 
-                if (ngMode === "over_reject") {
-                    quality = 100; // Always 100% for over_reject logic
-                } else if (totalOutput > 0) {
+                if (totalOutput > 0) {
                     quality = ((totalOutput - savedNgQty) / totalOutput) * 100;
                     if (quality < 0) quality = 0;
                 }
@@ -1717,13 +1710,7 @@ async function backfillOeeStartup(days = 5) {
                     const availability = calcAvailability(runTimeSeconds, excludedSeconds, totalActiveSeconds);
                     const idealCT = targetRow?.cycle_time_target || 0;
                     
-                    const ngMode = getNgMode(machineName);
-                    let effectiveOutputForPerf = totalOutput;
-                    if (ngMode === "over_reject") {
-                        const sumNg = ngMap[machineName] || 0;
-                        effectiveOutputForPerf = Math.max(0, totalOutput - sumNg);
-                    }
-                    const performance = calcPerformance(effectiveOutputForPerf, idealCT, runTimeSeconds);
+                    const performance = calcPerformance(totalOutput, idealCT, runTimeSeconds);
 
                     // 🆕 Fetch existing OEE to get the saved ng_qty for backfilling
                     const existingOee = await prisma.tb_oee.findFirst({
@@ -1735,9 +1722,7 @@ async function backfillOeeStartup(days = 5) {
                     let oeeValue = 0;
                     
                     // 🆕 ABR logic
-                    if (ngMode === "over_reject") {
-                        quality = 100;
-                    } else if (totalOutput > 0) {
+                    if (totalOutput > 0) {
                         quality = ((totalOutput - savedNgQty) / totalOutput) * 100;
                         if (quality < 0) quality = 0;
                     }
