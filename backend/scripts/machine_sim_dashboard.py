@@ -31,7 +31,7 @@ DEFAULT_CONFIG = {
     "influx_url": os.environ.get("INFLUX_URL", f"http://{os.environ.get('INFLUX_HOST', '127.0.0.1')}:{os.environ.get('INFLUX_PORT', '8086')}"),
     "influx_database": os.environ.get("INFLUX_DATABASE", "machine_db"),
     "machine_count": 8,
-    "interval": 1.0,
+    "interval": 0.05,
     "scenario": "stable",
     "planned_stop_seconds_per_hour": SCENARIOS["stable"].planned_stop_seconds_per_hour,
 }
@@ -43,7 +43,7 @@ def default_machine_configs() -> dict[str, dict[str, Any]]:
         configs[machine["name"]] = {
             "enabled": True,
             "status": "auto",
-            "interval": DEFAULT_CONFIG["interval"],
+            "scan_interval": 0.2,
             "planned_stop_seconds_per_hour": DEFAULT_CONFIG["planned_stop_seconds_per_hour"],
             "ng_rate_pct": round(random.uniform(0, 5), 2),
         }
@@ -177,6 +177,7 @@ class SimulatorRunner:
                 for machine in machines
             }
             next_due = {machine["name"]: 0.0 for machine in machines}
+            last_tick = {machine["name"]: time.monotonic() for machine in machines}
             client = connect_mqtt(str(config["mqtt_url"]))
             start_time = time.time()
 
@@ -192,13 +193,15 @@ class SimulatorRunner:
                     now_mono = time.monotonic()
                     if now_mono < next_due[machine["name"]]:
                         continue
-                    interval = max(0.2, float(machine_config["interval"]))
-                    next_due[machine["name"]] = now_mono + interval
+                    scan_interval = max(0.05, float(machine_config.get("scan_interval", machine_config.get("interval", 0.2))))
+                    elapsed_seconds = max(0.0, now_mono - last_tick[machine["name"]])
+                    last_tick[machine["name"]] = now_mono
+                    next_due[machine["name"]] = now_mono + scan_interval
                     payloads = generate_machine_events(
                         machine,
                         states[machine["name"]],
                         profiles[machine["name"]],
-                        elapsed_seconds=interval,
+                        elapsed_seconds=elapsed_seconds,
                         seq_base=int(time.time() * 1000) + idx * 100,
                     )
                     for payload in payloads:
@@ -233,7 +236,7 @@ class SimulatorRunner:
                         ideal_ct=avg_ideal_ct,
                     )
 
-                sleep_for = max(0.05, min(0.25, float(config["interval"]) - (time.time() - batch_start)))
+                sleep_for = max(0.02, min(0.1, float(config["interval"]) - (time.time() - batch_start)))
                 self.stop_event.wait(sleep_for)
         except Exception as exc:
             with self.lock:
@@ -325,7 +328,7 @@ HTML = """
       <label>Enable <select id="mc-enabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></label>
       <label>Status <select id="mc-status"><option>auto</option><option>Run_Time</option><option>Plan_Stop</option><option>Stop_Time</option><option>MC_Alarm</option><option>Break_Time</option></select></label>
       <div class="row">
-        <label>Send interval (sec)<input id="mc-interval" type="number" min="0.2" step="0.1" value="1"></label>
+        <label>Status scan (sec)<input id="mc-interval" type="number" min="0.05" step="0.05" value="0.2"></label>
         <label>Planned stop sec/hr<input id="mc-plan" type="number" min="0" max="3600" value="120"></label>
       </div>
       <div class="row">
@@ -399,7 +402,7 @@ function selectMachine(name) {
   document.getElementById('panel-title').textContent = name;
   document.getElementById('mc-enabled').value = String(cfg.enabled !== false);
   document.getElementById('mc-status').value = cfg.status || 'auto';
-  document.getElementById('mc-interval').value = cfg.interval || 1;
+  document.getElementById('mc-interval').value = cfg.scan_interval || cfg.interval || 0.2;
   document.getElementById('mc-plan').value = cfg.planned_stop_seconds_per_hour || 120;
   renderMachines();
 }
@@ -410,7 +413,7 @@ function applyPanel() {
     ...(machineConfigs[selected] || {}),
     enabled: document.getElementById('mc-enabled').value === 'true',
     status: document.getElementById('mc-status').value,
-    interval: Number(document.getElementById('mc-interval').value || 1),
+    scan_interval: Number(document.getElementById('mc-interval').value || 0.2),
     planned_stop_seconds_per_hour: Number(document.getElementById('mc-plan').value || 0),
   };
   renderMachines();
@@ -420,7 +423,7 @@ function readConfig() {
   return {
     scenario: 'stable',
     machine_count: Number(document.getElementById('machine_count').value || 10),
-    interval: 0.25,
+    interval: 0.05,
     planned_stop_seconds_per_hour: 120,
     mqtt_url: document.getElementById('mqtt_url').value,
     influx_url: document.getElementById('influx_url').value,

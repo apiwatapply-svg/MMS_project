@@ -60,6 +60,38 @@ class SimulatorCoreTests(unittest.TestCase):
         self.assertEqual(len([p for p in second if p["name"] == "data_tb"]), 1)
         self.assertIsInstance(state, MachineRuntimeState)
 
+    def test_one_second_scans_do_not_publish_output_before_cycle_time(self):
+        profile = SimulationProfile(
+            name="stable",
+            availability=100,
+            performance=100,
+            quality=100,
+            planned_stop_seconds_per_hour=0,
+        )
+        machine = {
+            "area": "ECM",
+            "type": "AHV",
+            "name": "AHV-001",
+            "model": "Dorado 10D",
+            "ideal_ct": 4.2,
+        }
+        state = create_machine_state(machine)
+
+        first_four_seconds = [
+            payload
+            for second in range(4)
+            for payload in generate_machine_events(machine, state, profile, elapsed_seconds=1.0, seq_base=second * 100)
+            if payload["name"] == "data_tb"
+        ]
+        fifth_second = [
+            payload
+            for payload in generate_machine_events(machine, state, profile, elapsed_seconds=1.0, seq_base=500)
+            if payload["name"] == "data_tb"
+        ]
+
+        self.assertEqual(first_four_seconds, [])
+        self.assertEqual(len(fifth_second), 1)
+
     def test_plan_stop_emits_status_but_no_output(self):
         profile = SimulationProfile(
             name="plan_stop",
