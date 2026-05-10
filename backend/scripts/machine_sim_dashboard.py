@@ -64,6 +64,7 @@ class SimulatorRunner:
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
         self.thread: threading.Thread | None = None
+        self.machine_threads: list[threading.Thread] = []
         self.running = False
         self.config = DEFAULT_CONFIG.copy()
         self.machine_configs = default_machine_configs()
@@ -98,14 +99,17 @@ class SimulatorRunner:
                 "metrics": {"availability": 0, "performance": 0, "quality": 0, "oee": 0},
             }
             self.stop_event.clear()
-            self.thread = threading.Thread(target=self._run, daemon=True)
             self.running = True
-            self.thread.start()
+        self._start_workers()
 
     def stop(self) -> None:
         self.stop_event.set()
+        for thread in self.machine_threads:
+            if thread.is_alive():
+                thread.join(timeout=0.02)
         if self.thread and self.thread.is_alive():
-            self.thread.join(timeout=3)
+            self.thread.join(timeout=0.5)
+        self.machine_threads = []
         with self.lock:
             self.running = False
 
@@ -174,77 +178,106 @@ class SimulatorRunner:
             "metrics": metrics,
         }
 
-    def _run(self) -> None:
+    def _start_workers(self) -> None:
+        config = self.config.copy()
+        machines = selected_machines(config["machine_count"])
+        states = {machine["name"]: create_machine_state(machine) for machine in machines}
+        with self.lock:
+            self.machine_states = states
+
+        self.machine_threads = [
+            threading.Thread(target=self._run_machine, args=(machine,), daemon=True)
+            for machine in machines
+        ]
+        for thread in self.machine_threads:
+            thread.start()
+
+        self.thread = threading.Thread(target=self._run_metrics, args=(machines,), daemon=True)
+        self.thread.start()
+
+    def _run_machine(self, machine: dict[str, Any]) -> None:
         client = None
         try:
             config = self.config.copy()
-            machines = selected_machines(config["machine_count"])
-            states = {machine["name"]: create_machine_state(machine) for machine in machines}
-            with self.lock:
-                self.machine_states = states
-            next_due = {machine["name"]: 0.0 for machine in machines}
-            last_tick = {machine["name"]: time.monotonic() for machine in machines}
             client = connect_mqtt(str(config["mqtt_url"]))
-            start_time = time.time()
+            next_due = 0.0
+            last_tick = time.monotonic()
+            seq_offset = abs(hash(machine["name"])) % 10000
 
             while not self.stop_event.is_set():
-                batch_start = time.time()
-                produced_this_batch = 0
-                ng_this_batch = 0
+                with self.lock:
+                    config = self.config.copy()
+                    machine_config = self.machine_configs[machine["name"]].copy()
 
-                for idx, machine in enumerate(machines):
+                now_mono = time.monotonic()
+                scan_interval = max(0.05, float(machine_config.get("scan_interval", machine_config.get("interval", 0.2))))
+                if now_mono < next_due:
+                    self.stop_event.wait(min(0.05, next_due - now_mono))
+                    continue
+
+                if not machine_config.get("enabled", True):
+                    last_tick = now_mono
+                    next_due = now_mono + scan_interval
+                    continue
+
+                elapsed_seconds = max(0.0, now_mono - last_tick)
+                last_tick = now_mono
+                next_due = now_mono + scan_interval
+                profile = get_profile(
+                    str(config["scenario"]),
+                    availability=100,
+                    performance=100,
+                    quality=100,
+                    planned_stop_seconds_per_hour=int(machine_config["planned_stop_seconds_per_hour"]),
+                    force_status=machine_config["status"],
+                    ng_rate_pct=float(machine_config.get("ng_rate_pct", random.uniform(0, 5))),
+                )
+
+                payloads = generate_machine_events(
+                    machine,
+                    self.machine_states[machine["name"]],
+                    profile,
+                    elapsed_seconds=elapsed_seconds,
+                    seq_base=int(time.time() * 1000) + seq_offset,
+                )
+                produced_this_scan = 0
+                ng_this_scan = 0
+                for payload in payloads:
+                    topic = f"factory/{machine['type']}/{machine['name']}/{payload['name']}"
+                    publish_mqtt(client, str(config["mqtt_url"]), topic, payload)
+                    write_influx(str(config["influx_url"]), str(config["influx_database"]), payload)
+                    if payload["name"] == "status_tb":
+                        with self.lock:
+                            self.stats["last_status"][machine["name"]] = payload["fields"]["Status"]
+                    if payload["name"] == "data_tb":
+                        produced_this_scan += 1
+                        if payload["fields"].get("ng_indicator") == "NG":
+                            ng_this_scan += 1
+
+                if payloads:
                     with self.lock:
-                        machine_config = self.machine_configs[machine["name"]].copy()
-                    if not machine_config.get("enabled", True):
-                        continue
-                    profile = get_profile(
-                        str(config["scenario"]),
-                        availability=100,
-                        performance=100,
-                        quality=100,
-                        planned_stop_seconds_per_hour=int(machine_config["planned_stop_seconds_per_hour"]),
-                        force_status=machine_config["status"],
-                        ng_rate_pct=float(machine_config.get("ng_rate_pct", random.uniform(0, 5))),
-                    )
-                    now_mono = time.monotonic()
-                    if now_mono < next_due[machine["name"]]:
-                        continue
-                    scan_interval = max(0.05, float(machine_config.get("scan_interval", machine_config.get("interval", 0.2))))
-                    elapsed_seconds = max(0.0, now_mono - last_tick[machine["name"]])
-                    last_tick[machine["name"]] = now_mono
-                    next_due[machine["name"]] = now_mono + scan_interval
-                    payloads = generate_machine_events(
-                        machine,
-                        states[machine["name"]],
-                        profile,
-                        elapsed_seconds=elapsed_seconds,
-                        seq_base=int(time.time() * 1000) + idx * 100,
-                    )
-                    for payload in payloads:
-                        topic = f"factory/{machine['type']}/{machine['name']}/{payload['name']}"
-                        publish_mqtt(client, str(config["mqtt_url"]), topic, payload)
-                        write_influx(str(config["influx_url"]), str(config["influx_database"]), payload)
-                        if payload["name"] == "status_tb":
-                            with self.lock:
-                                self.stats["last_status"][machine["name"]] = payload["fields"]["Status"]
-                        if payload["name"] == "data_tb":
-                            produced_this_batch += 1
-                            if payload["fields"].get("ng_indicator") == "NG":
-                                ng_this_batch += 1
+                        self.stats["batches"] += 1
+                        self.stats["output"] += produced_this_scan
+                        self.stats["ng"] += ng_this_scan
+        except Exception as exc:
+            with self.lock:
+                self.stats["last_error"] = f"{machine['name']}: {exc}"
+        finally:
+            if client is not None:
+                client.loop_stop()
+                client.disconnect()
 
-                elapsed = max(1.0, time.time() - start_time)
+    def _run_metrics(self, machines: list[dict[str, Any]]) -> None:
+        try:
+            while not self.stop_event.is_set():
                 with self.lock:
                     active_machine_names = {m["name"] for m in machines if self.machine_configs[m["name"]].get("enabled", True)}
-                active_states = [states[machine_name] for machine_name in active_machine_names]
-                elapsed_machine_seconds = sum(s.total_seconds for s in active_states) or elapsed
-                run_seconds = sum(s.run_seconds for s in active_states)
-                excluded_seconds = sum(s.excluded_seconds for s in active_states)
-                avg_ideal_ct = sum(float(m["ideal_ct"]) for m in machines) / len(machines)
-
-                with self.lock:
-                    self.stats["batches"] += 1
-                    self.stats["output"] += produced_this_batch
-                    self.stats["ng"] += ng_this_batch
+                    active_states = [self.machine_states[machine_name] for machine_name in active_machine_names if machine_name in self.machine_states]
+                    elapsed_machine_seconds = sum(s.total_seconds for s in active_states)
+                    run_seconds = sum(s.run_seconds for s in active_states)
+                    excluded_seconds = sum(s.excluded_seconds for s in active_states)
+                    active_machines = [m for m in machines if m["name"] in active_machine_names]
+                    avg_ideal_ct = sum(float(m["ideal_ct"]) for m in active_machines) / len(active_machines) if active_machines else 0
                     self.stats["metrics"] = calculate_expected_metrics(
                         total_seconds=elapsed_machine_seconds,
                         run_seconds=run_seconds,
@@ -253,18 +286,10 @@ class SimulatorRunner:
                         ng_qty=self.stats["ng"],
                         ideal_ct=avg_ideal_ct,
                     )
-
-                sleep_for = max(0.02, min(0.1, float(config["interval"]) - (time.time() - batch_start)))
-                self.stop_event.wait(sleep_for)
+                self.stop_event.wait(0.5)
         except Exception as exc:
             with self.lock:
                 self.stats["last_error"] = str(exc)
-        finally:
-            if client is not None:
-                client.loop_stop()
-                client.disconnect()
-            with self.lock:
-                self.running = False
 
 
 RUNNER = SimulatorRunner()
