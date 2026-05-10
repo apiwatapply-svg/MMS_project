@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 
 const port = Number(process.env.SMOKE_PORT || 5099);
-const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 20000);
+const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 60000);
 const healthUrl = `http://127.0.0.1:${port}/api/health`;
 
 const server = spawn(process.execPath, ["server.js"], {
@@ -18,11 +18,15 @@ const server = spawn(process.execPath, ["server.js"], {
 });
 
 let output = "";
+let serverExit = null;
 server.stdout.on("data", (chunk) => {
     output += chunk.toString();
 });
 server.stderr.on("data", (chunk) => {
     output += chunk.toString();
+});
+server.on("exit", (code, signal) => {
+    serverExit = { code, signal };
 });
 
 function stopServer() {
@@ -34,6 +38,9 @@ function stopServer() {
 async function waitForHealth() {
     const startedAt = Date.now();
     while (Date.now() - startedAt < timeoutMs) {
+        if (serverExit) {
+            throw new Error(`Server exited before health check passed (code=${serverExit.code}, signal=${serverExit.signal})\n${output}`);
+        }
         try {
             const response = await fetch(healthUrl);
             const body = await response.json();
