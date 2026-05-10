@@ -33,6 +33,7 @@ Use this when explaining the project in an interview:
 - `CI`: checks code quality and prevents broken OEE/report/dashboard logic from being pushed unnoticed.
 - `Smoke test`: starts the real Express server with machine I/O disabled and verifies `/api/health`.
 - `CD approach`: after CI passes, build the frontend, install backend dependencies, generate Prisma Client, then restart the PM2 process on the customer server.
+- `SSH deployment`: when deployment secrets are configured, GitHub Actions connects to the customer server over SSH and runs `scripts/deploy_pm2.sh`.
 
 ## Architecture Flow
 
@@ -218,6 +219,8 @@ pm2 startup
 ```
 
 The backend serves the exported Next.js frontend from `fontend/out` in production.
+
+For SSH-based CD from GitHub Actions, configure the repository secrets in [PM2 Deployment Guide](docs/PM2_DEPLOYMENT.md), then push to `main`. CI must pass before the deploy job runs.
 
 ## Documentation
 

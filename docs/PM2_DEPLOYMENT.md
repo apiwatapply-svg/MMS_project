@@ -96,7 +96,106 @@ pm2 restart mms-dashboard-api --update-env
 pm2 save
 ```
 
-## 4. Verification After Deployment
+Or run the deployment helper from the project root:
+
+```bash
+bash scripts/deploy_pm2.sh
+```
+
+This helper performs:
+
+1. `git pull --ff-only origin main`
+2. backend `npm ci --omit=dev`
+3. backend `npm run prisma:generate`
+4. frontend `npm ci`
+5. frontend `npm run build`
+6. `pm2 restart mms-dashboard-api --update-env` or first-time `pm2 start ecosystem.config.js`
+7. `/api/health` verification
+
+## 4. Automatic CD with GitHub Actions and SSH
+
+This project supports SSH-based CD from GitHub Actions. The flow is:
+
+```mermaid
+flowchart LR
+  Push["git push to main"] --> CI["CI: test and build"]
+  CI --> DeployJob["deploy-production job"]
+  DeployJob --> SSH["SSH to customer server"]
+  SSH --> Pull["git pull on server"]
+  Pull --> Build["npm ci + prisma generate + frontend build"]
+  Build --> PM2["pm2 restart"]
+  PM2 --> Health["curl /api/health"]
+```
+
+The deploy job runs only after the `test-and-build` CI job passes. If SSH secrets are not configured, the deploy job skips deployment and prints which secrets are missing.
+
+Add these repository secrets in GitHub:
+
+```text
+Settings > Secrets and variables > Actions > New repository secret
+```
+
+Required secrets:
+
+| Secret | Example | Meaning |
+| --- | --- | --- |
+| `DEPLOY_HOST` | `203.0.113.10` | Public IP, DNS name, or VPN-reachable host of the customer server. |
+| `DEPLOY_USER` | `deploy` | SSH username on the customer server. |
+| `DEPLOY_PATH` | `/opt/MMS_project` | Absolute path of the cloned project on the customer server. |
+| `SSH_PRIVATE_KEY` | private key text | Private key that can SSH into `DEPLOY_USER@DEPLOY_HOST`. |
+
+Optional secrets:
+
+| Secret | Example | Meaning |
+| --- | --- | --- |
+| `DEPLOY_PORT` | `22` | SSH port. Defaults to `22` if empty. |
+| `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan` | Pinned SSH host key. If empty, GitHub Actions runs `ssh-keyscan` during deployment. |
+
+### Create SSH Key for Deployment
+
+On your development machine:
+
+```bash
+ssh-keygen -t ed25519 -C "mms-github-actions-deploy" -f ~/.ssh/mms_github_actions
+```
+
+Put the public key on the customer server:
+
+```bash
+cat ~/.ssh/mms_github_actions.pub
+```
+
+Add that public key into:
+
+```text
+~/.ssh/authorized_keys
+```
+
+Copy the private key content into GitHub secret `SSH_PRIVATE_KEY`:
+
+```bash
+cat ~/.ssh/mms_github_actions
+```
+
+### Prepare the Customer Server
+
+The project must already be cloned once on the customer server:
+
+```bash
+git clone https://github.com/apiwatapply-svg/MMS_project.git /opt/MMS_project
+cd /opt/MMS_project
+```
+
+Create `backend/.env`, install PM2, and run the first deployment manually:
+
+```bash
+npm install -g pm2
+bash scripts/deploy_pm2.sh
+```
+
+After this, every push to `main` can deploy automatically when CI passes.
+
+## 5. Verification After Deployment
 
 Check PM2:
 
@@ -135,7 +234,7 @@ Verify these pages:
 - `/oee_production/machine_report`
 - `/oee_production/machine_ng`
 
-## 5. Rollback
+## 6. Rollback
 
 If the new deployment has a problem, return to the previous commit and restart PM2.
 
@@ -162,7 +261,7 @@ After the issue is fixed, switch back to `main`:
 git switch main
 ```
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 Port is already used:
 

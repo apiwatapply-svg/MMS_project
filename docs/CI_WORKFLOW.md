@@ -36,6 +36,37 @@ For a stricter team workflow, enable branch protection on GitHub:
 
 After this, code cannot be merged into `main` unless CI passes.
 
+## CD with SSH and PM2
+
+The workflow also includes a `deploy-production` job for method 1 deployment: GitHub Actions connects to the customer server by SSH and runs the PM2 deployment script.
+
+The deploy job runs only when:
+
+- the event is `push`
+- the branch is `main`
+- the `test-and-build` CI job passed
+- the SSH deployment secrets are configured
+
+Required GitHub repository secrets:
+
+- `DEPLOY_HOST`
+- `DEPLOY_USER`
+- `DEPLOY_PATH`
+- `SSH_PRIVATE_KEY`
+
+Optional secrets:
+
+- `DEPLOY_PORT`
+- `DEPLOY_KNOWN_HOSTS`
+
+Deployment command executed on the remote server:
+
+```bash
+cd "$DEPLOY_PATH" && bash scripts/deploy_pm2.sh
+```
+
+See [PM2 Deployment Guide](PM2_DEPLOYMENT.md) for server setup and secret configuration.
+
 ## CI Steps
 
 1. Checkout source code.
