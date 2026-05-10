@@ -1,0 +1,1 @@
+const { InfluxDB } = require('influx'); const influx = new InfluxDB('http://192.168.100.99:5012/machine_db'); influx.query('SELECT COUNT(\"cycle_time\") FROM data_tb WHERE \"machine_name\"=\'AHV-006\' AND time >= now() - 24h GROUP BY \"Model\"').then(console.log).catch(console.error);

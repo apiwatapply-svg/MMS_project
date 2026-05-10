@@ -1,0 +1,1 @@
+const { InfluxDB } = require('influx'); const influx = new InfluxDB('http://192.168.100.99:5012/machine_db'); influx.queryRaw('SELECT COUNT(\"cycle_time\") AS \"output_count\", MEAN(\"cycle_time\") AS \"avg_cycle_time\" FROM \"data_tb\" WHERE time >= now() - 1h GROUP BY \"machine_name\", \"Model\"').then(res => console.log(JSON.stringify(res, null, 2))).catch(console.error);

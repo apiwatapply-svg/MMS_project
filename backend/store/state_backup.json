@@ -1,0 +1,2217 @@
+{
+  "timestamp": "2026-05-09T01:51:55.199Z",
+  "mqttMem": {
+    "ABR-002": {
+      "machine_name": "ABR-002",
+      "current_hour_actual": 682,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {
+        "St#1 Station A": 1,
+        "St#2 Station B": 3,
+        "True_NG": 4
+      },
+      "last_cycle_time": 3.0042521994134765,
+      "sum_cycle_time": 2048.899999999991,
+      "last_update": "2026-05-08T23:48:05.726Z",
+      "current_hour_label": "16",
+      "live_status": "Plan_Stop",
+      "live_alarm": "RCON SOFT ALARM"
+    },
+    "ABR-001": {
+      "machine_name": "ABR-001",
+      "current_hour_actual": 821,
+      "current_hour_ng": 9,
+      "current_hour_station_ng": {
+        "St#1 Station A": 9,
+        "True_NG": 9
+      },
+      "last_cycle_time": 2.9382704019488393,
+      "sum_cycle_time": 2412.319999999997,
+      "last_update": "2026-05-09T01:48:06.400Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": "LDIN Support Tray Close : X54,X56 & Tray Clamp : X5B"
+    },
+    "AHV-001": {
+      "machine_name": "AHV-001",
+      "current_hour_actual": 1195,
+      "current_hour_ng": 324,
+      "current_hour_station_ng": {
+        "St#7 ID Top": 148,
+        "St#9 ECM Conical Groove Top & Bottom": 193,
+        "St#11 Top HUB & OD Hub": 5,
+        "True_NG": 324,
+        "St#5 ID Bottom": 5,
+        "St#3 Bottom Hub ECM & OD Sleeve": 4
+      },
+      "last_cycle_time": 4.3229958158996125,
+      "sum_cycle_time": 5165.980000000037,
+      "last_update": "2026-05-09T01:51:50.997Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": null
+    },
+    "AHV-002": {
+      "machine_name": "AHV-002",
+      "current_hour_actual": 730,
+      "current_hour_ng": 123,
+      "current_hour_station_ng": {
+        "St#11 Top HUB & OD Hub": 5,
+        "True_NG": 123,
+        "St#3 Bottom Hub ECM & OD Sleeve": 30,
+        "St#5 ID Bottom": 47,
+        "St#9 ECM Conical Groove Top & Bottom": 49,
+        "St#7 ID Top": 4
+      },
+      "last_cycle_time": 4.151506849315067,
+      "sum_cycle_time": 3030.5999999999985,
+      "last_update": "2026-05-09T01:51:55.176Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": null
+    },
+    "AHV-003": {
+      "machine_name": "AHV-003",
+      "current_hour_actual": 712,
+      "current_hour_ng": 286,
+      "current_hour_station_ng": {
+        "St#5 ID Bottom": 36,
+        "True_NG": 286,
+        "St#9 ECM Conical Groove Top & Bottom": 225,
+        "St#3 Bottom Hub ECM & OD Sleeve": 5,
+        "St#7 ID Top": 41,
+        "St#11 Top HUB & OD Hub": 2
+      },
+      "last_cycle_time": 3.9658286516854018,
+      "sum_cycle_time": 2823.670000000006,
+      "last_update": "2026-05-09T01:51:50.962Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": null
+    },
+    "AHV-004": {
+      "machine_name": "AHV-004",
+      "current_hour_actual": 237,
+      "current_hour_ng": 86,
+      "current_hour_station_ng": {
+        "St#3 Bottom Hub ECM & OD Sleeve": 23,
+        "True_NG": 86,
+        "St#7 ID Top": 12,
+        "St#9 ECM Conical Groove Top & Bottom": 54,
+        "St#5 ID Bottom": 10,
+        "St#11 Top HUB & OD Hub": 9
+      },
+      "last_cycle_time": 4.038734177215188,
+      "sum_cycle_time": 957.1799999999996,
+      "last_update": "2026-05-09T01:20:06.677Z",
+      "current_hour_label": "08",
+      "live_status": "Prod_Check_Master",
+      "live_alarm": null
+    },
+    "AHV-005": {
+      "machine_name": "AHV-005",
+      "current_hour_actual": 752,
+      "current_hour_ng": 277,
+      "current_hour_station_ng": {
+        "St#9 ECM Conical Groove Top & Bottom": 212,
+        "True_NG": 277,
+        "St#5 ID Bottom": 78,
+        "St#7 ID Top": 10,
+        "St#3 Bottom Hub ECM & OD Sleeve": 3
+      },
+      "last_cycle_time": 3.8801329787233905,
+      "sum_cycle_time": 2917.8599999999897,
+      "last_update": "2026-05-09T01:51:53.341Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": null
+    },
+    "AHV-006": {
+      "machine_name": "AHV-006",
+      "current_hour_actual": 642,
+      "current_hour_ng": 142,
+      "current_hour_station_ng": {
+        "St#7 ID Top": 63,
+        "True_NG": 142,
+        "St#5 ID Bottom": 27,
+        "St#9 ECM Conical Groove Top & Bottom": 60,
+        "St#11 Top HUB & OD Hub": 4
+      },
+      "last_cycle_time": 3.8935669781931357,
+      "sum_cycle_time": 2499.6699999999933,
+      "last_update": "2026-05-09T01:51:52.895Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": null
+    },
+    "ABR-003": {
+      "machine_name": "ABR-003",
+      "current_hour_actual": 1024,
+      "current_hour_ng": 8,
+      "current_hour_station_ng": {
+        "St#1 Station A": 8,
+        "True_NG": 8
+      },
+      "last_cycle_time": 2.7699316406249963,
+      "sum_cycle_time": 2836.409999999996,
+      "last_update": "2026-05-09T01:48:06.402Z",
+      "current_hour_label": "08",
+      "live_status": "Run_Time",
+      "live_alarm": "TFIN RETRY PICK HMI SHOW"
+    },
+    "ACR-001": {
+      "machine_name": "ACR-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.778Z",
+      "current_hour_label": ""
+    },
+    "ACR-002": {
+      "machine_name": "ACR-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.806Z",
+      "current_hour_label": ""
+    },
+    "ACR-003": {
+      "machine_name": "ACR-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.835Z",
+      "current_hour_label": ""
+    },
+    "ACR-004": {
+      "machine_name": "ACR-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.862Z",
+      "current_hour_label": ""
+    },
+    "ACR-005": {
+      "machine_name": "ACR-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.889Z",
+      "current_hour_label": ""
+    },
+    "ACR-006": {
+      "machine_name": "ACR-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.917Z",
+      "current_hour_label": ""
+    },
+    "Chydos1": {
+      "machine_name": "Chydos1",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.945Z",
+      "current_hour_label": ""
+    },
+    "Chydos2": {
+      "machine_name": "Chydos2",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:12.974Z",
+      "current_hour_label": ""
+    },
+    "DLC-002": {
+      "machine_name": "DLC-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.013Z",
+      "current_hour_label": ""
+    },
+    "DLC-003": {
+      "machine_name": "DLC-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.039Z",
+      "current_hour_label": ""
+    },
+    "DLC-004": {
+      "machine_name": "DLC-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.065Z",
+      "current_hour_label": ""
+    },
+    "DLC-005": {
+      "machine_name": "DLC-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.090Z",
+      "current_hour_label": ""
+    },
+    "DLC-006": {
+      "machine_name": "DLC-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.117Z",
+      "current_hour_label": ""
+    },
+    "DLC-007": {
+      "machine_name": "DLC-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.148Z",
+      "current_hour_label": ""
+    },
+    "DLC-008": {
+      "machine_name": "DLC-008",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.176Z",
+      "current_hour_label": ""
+    },
+    "DLC-009": {
+      "machine_name": "DLC-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.200Z",
+      "current_hour_label": ""
+    },
+    "DLC-010": {
+      "machine_name": "DLC-010",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.226Z",
+      "current_hour_label": ""
+    },
+    "DLC-011": {
+      "machine_name": "DLC-011",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.253Z",
+      "current_hour_label": ""
+    },
+    "DLC-012": {
+      "machine_name": "DLC-012",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.280Z",
+      "current_hour_label": ""
+    },
+    "AQS-009": {
+      "machine_name": "AQS-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.306Z",
+      "current_hour_label": ""
+    },
+    "AVE-001": {
+      "machine_name": "AVE-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.339Z",
+      "current_hour_label": ""
+    },
+    "WTM-001": {
+      "machine_name": "WTM-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.365Z",
+      "current_hour_label": ""
+    },
+    "WTM-002": {
+      "machine_name": "WTM-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.396Z",
+      "current_hour_label": ""
+    },
+    "ABR-004": {
+      "machine_name": "ABR-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.464Z",
+      "current_hour_label": ""
+    },
+    "ABR-005": {
+      "machine_name": "ABR-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.491Z",
+      "current_hour_label": ""
+    },
+    "ABR-006": {
+      "machine_name": "ABR-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.519Z",
+      "current_hour_label": ""
+    },
+    "ACP-002": {
+      "machine_name": "ACP-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.545Z",
+      "current_hour_label": ""
+    },
+    "ACP-003": {
+      "machine_name": "ACP-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.570Z",
+      "current_hour_label": ""
+    },
+    "ACP-004": {
+      "machine_name": "ACP-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.595Z",
+      "current_hour_label": ""
+    },
+    "ACP-005": {
+      "machine_name": "ACP-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.627Z",
+      "current_hour_label": ""
+    },
+    "ACP-006": {
+      "machine_name": "ACP-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.652Z",
+      "current_hour_label": ""
+    },
+    "ACP-007": {
+      "machine_name": "ACP-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.679Z",
+      "current_hour_label": ""
+    },
+    "ACP-008": {
+      "machine_name": "ACP-008",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.705Z",
+      "current_hour_label": ""
+    },
+    "ACP-009": {
+      "machine_name": "ACP-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.732Z",
+      "current_hour_label": ""
+    },
+    "ACP-010": {
+      "machine_name": "ACP-010",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.756Z",
+      "current_hour_label": ""
+    },
+    "ACP-011": {
+      "machine_name": "ACP-011",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.780Z",
+      "current_hour_label": ""
+    },
+    "ACP-012": {
+      "machine_name": "ACP-012",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.806Z",
+      "current_hour_label": ""
+    },
+    "AIU-001": {
+      "machine_name": "AIU-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.832Z",
+      "current_hour_label": ""
+    },
+    "AIU-002": {
+      "machine_name": "AIU-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.858Z",
+      "current_hour_label": ""
+    },
+    "AOC-001": {
+      "machine_name": "AOC-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.895Z",
+      "current_hour_label": ""
+    },
+    "AOC-002": {
+      "machine_name": "AOC-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.921Z",
+      "current_hour_label": ""
+    },
+    "AOC-003": {
+      "machine_name": "AOC-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.944Z",
+      "current_hour_label": ""
+    },
+    "AOC-004": {
+      "machine_name": "AOC-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.970Z",
+      "current_hour_label": ""
+    },
+    "AOC-005": {
+      "machine_name": "AOC-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:13.993Z",
+      "current_hour_label": ""
+    },
+    "AOC-006": {
+      "machine_name": "AOC-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.025Z",
+      "current_hour_label": ""
+    },
+    "AOC-007": {
+      "machine_name": "AOC-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.053Z",
+      "current_hour_label": ""
+    },
+    "AFU-002": {
+      "machine_name": "AFU-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.080Z",
+      "current_hour_label": ""
+    },
+    "AFU-003": {
+      "machine_name": "AFU-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.104Z",
+      "current_hour_label": ""
+    },
+    "AFU-004": {
+      "machine_name": "AFU-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.132Z",
+      "current_hour_label": ""
+    },
+    "ARA-001": {
+      "machine_name": "ARA-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.156Z",
+      "current_hour_label": ""
+    },
+    "ART-002": {
+      "machine_name": "ART-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.184Z",
+      "current_hour_label": ""
+    },
+    "ART-004": {
+      "machine_name": "ART-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.209Z",
+      "current_hour_label": ""
+    },
+    "ART-006": {
+      "machine_name": "ART-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.236Z",
+      "current_hour_label": ""
+    },
+    "ART-009": {
+      "machine_name": "ART-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.263Z",
+      "current_hour_label": ""
+    },
+    "ART-010": {
+      "machine_name": "ART-010",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.290Z",
+      "current_hour_label": ""
+    },
+    "ART-011": {
+      "machine_name": "ART-011",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.316Z",
+      "current_hour_label": ""
+    },
+    "ART-013": {
+      "machine_name": "ART-013",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.351Z",
+      "current_hour_label": ""
+    },
+    "ART-015": {
+      "machine_name": "ART-015",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.378Z",
+      "current_hour_label": ""
+    },
+    "ART-016": {
+      "machine_name": "ART-016",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.405Z",
+      "current_hour_label": ""
+    },
+    "ART-018": {
+      "machine_name": "ART-018",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.432Z",
+      "current_hour_label": ""
+    },
+    "ART-021": {
+      "machine_name": "ART-021",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.456Z",
+      "current_hour_label": ""
+    },
+    "ATX-002": {
+      "machine_name": "ATX-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.481Z",
+      "current_hour_label": ""
+    },
+    "ATX-003": {
+      "machine_name": "ATX-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.505Z",
+      "current_hour_label": ""
+    },
+    "ATX-004": {
+      "machine_name": "ATX-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.530Z",
+      "current_hour_label": ""
+    },
+    "STC-001": {
+      "machine_name": "STC-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.553Z",
+      "current_hour_label": ""
+    },
+    "FSPZ": {
+      "machine_name": "FSPZ",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.577Z",
+      "current_hour_label": ""
+    },
+    "GE2-001": {
+      "machine_name": "GE2-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.601Z",
+      "current_hour_label": ""
+    },
+    "GE2-002": {
+      "machine_name": "GE2-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.626Z",
+      "current_hour_label": ""
+    },
+    "GE2-003": {
+      "machine_name": "GE2-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.651Z",
+      "current_hour_label": ""
+    },
+    "GE2-004": {
+      "machine_name": "GE2-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.675Z",
+      "current_hour_label": ""
+    },
+    "GE2-005": {
+      "machine_name": "GE2-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.701Z",
+      "current_hour_label": ""
+    },
+    "GE2-006": {
+      "machine_name": "GE2-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.727Z",
+      "current_hour_label": ""
+    },
+    "GE2-007": {
+      "machine_name": "GE2-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.752Z",
+      "current_hour_label": ""
+    },
+    "GE2-008": {
+      "machine_name": "GE2-008",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.775Z",
+      "current_hour_label": ""
+    },
+    "GE2-009": {
+      "machine_name": "GE2-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.801Z",
+      "current_hour_label": ""
+    },
+    "GE2-010": {
+      "machine_name": "GE2-010",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.824Z",
+      "current_hour_label": ""
+    },
+    "GE2-011": {
+      "machine_name": "GE2-011",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.848Z",
+      "current_hour_label": ""
+    },
+    "GE2-012": {
+      "machine_name": "GE2-012",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.872Z",
+      "current_hour_label": ""
+    },
+    "GE2-013": {
+      "machine_name": "GE2-013",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.896Z",
+      "current_hour_label": ""
+    },
+    "GE2-014": {
+      "machine_name": "GE2-014",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.920Z",
+      "current_hour_label": ""
+    },
+    "GE2-015": {
+      "machine_name": "GE2-015",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.945Z",
+      "current_hour_label": ""
+    },
+    "GE2-016": {
+      "machine_name": "GE2-016",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.968Z",
+      "current_hour_label": ""
+    },
+    "GE2-017": {
+      "machine_name": "GE2-017",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:14.992Z",
+      "current_hour_label": ""
+    },
+    "GE2-018": {
+      "machine_name": "GE2-018",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.017Z",
+      "current_hour_label": ""
+    },
+    "GE2-019": {
+      "machine_name": "GE2-019",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.042Z",
+      "current_hour_label": ""
+    },
+    "GE2-020": {
+      "machine_name": "GE2-020",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.068Z",
+      "current_hour_label": ""
+    },
+    "GE2-021": {
+      "machine_name": "GE2-021",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.092Z",
+      "current_hour_label": ""
+    },
+    "GE2-022": {
+      "machine_name": "GE2-022",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.118Z",
+      "current_hour_label": ""
+    },
+    "GE2-033": {
+      "machine_name": "GE2-033",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.141Z",
+      "current_hour_label": ""
+    },
+    "GE2-034": {
+      "machine_name": "GE2-034",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.165Z",
+      "current_hour_label": ""
+    },
+    "GE2-035": {
+      "machine_name": "GE2-035",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.189Z",
+      "current_hour_label": ""
+    },
+    "GE2-036": {
+      "machine_name": "GE2-036",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.216Z",
+      "current_hour_label": ""
+    },
+    "GE2-038": {
+      "machine_name": "GE2-038",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.241Z",
+      "current_hour_label": ""
+    },
+    "GE2-039": {
+      "machine_name": "GE2-039",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.266Z",
+      "current_hour_label": ""
+    },
+    "GE2-040": {
+      "machine_name": "GE2-040",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.290Z",
+      "current_hour_label": ""
+    },
+    "GE3-001": {
+      "machine_name": "GE3-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.317Z",
+      "current_hour_label": ""
+    },
+    "GE3-003": {
+      "machine_name": "GE3-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.342Z",
+      "current_hour_label": ""
+    },
+    "GE3-007": {
+      "machine_name": "GE3-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.366Z",
+      "current_hour_label": ""
+    },
+    "GE3-008": {
+      "machine_name": "GE3-008",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.390Z",
+      "current_hour_label": ""
+    },
+    "GE3-009": {
+      "machine_name": "GE3-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.419Z",
+      "current_hour_label": ""
+    },
+    "GE3-010": {
+      "machine_name": "GE3-010",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.443Z",
+      "current_hour_label": ""
+    },
+    "HEL-001": {
+      "machine_name": "HEL-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.468Z",
+      "current_hour_label": ""
+    },
+    "HEL-002": {
+      "machine_name": "HEL-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.495Z",
+      "current_hour_label": ""
+    },
+    "HEL-003": {
+      "machine_name": "HEL-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.521Z",
+      "current_hour_label": ""
+    },
+    "HEL-004": {
+      "machine_name": "HEL-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.545Z",
+      "current_hour_label": ""
+    },
+    "HEL-005": {
+      "machine_name": "HEL-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.569Z",
+      "current_hour_label": ""
+    },
+    "HEL-006": {
+      "machine_name": "HEL-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.594Z",
+      "current_hour_label": ""
+    },
+    "HEL-007": {
+      "machine_name": "HEL-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.618Z",
+      "current_hour_label": ""
+    },
+    "HEL-017": {
+      "machine_name": "HEL-017",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.642Z",
+      "current_hour_label": ""
+    },
+    "HEL-018": {
+      "machine_name": "HEL-018",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.667Z",
+      "current_hour_label": ""
+    },
+    "HEL-026": {
+      "machine_name": "HEL-026",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.692Z",
+      "current_hour_label": ""
+    },
+    "HEL-028": {
+      "machine_name": "HEL-028",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.715Z",
+      "current_hour_label": ""
+    },
+    "HEL-030": {
+      "machine_name": "HEL-030",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.741Z",
+      "current_hour_label": ""
+    },
+    "HEL-032": {
+      "machine_name": "HEL-032",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.766Z",
+      "current_hour_label": ""
+    },
+    "HEL-033": {
+      "machine_name": "HEL-033",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.790Z",
+      "current_hour_label": ""
+    },
+    "HEL-036": {
+      "machine_name": "HEL-036",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.813Z",
+      "current_hour_label": ""
+    },
+    "HEL-040": {
+      "machine_name": "HEL-040",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.838Z",
+      "current_hour_label": ""
+    },
+    "HEL-041": {
+      "machine_name": "HEL-041",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.862Z",
+      "current_hour_label": ""
+    },
+    "HEL-043": {
+      "machine_name": "HEL-043",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.888Z",
+      "current_hour_label": ""
+    },
+    "HEL-044": {
+      "machine_name": "HEL-044",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.913Z",
+      "current_hour_label": ""
+    },
+    "HEL-046": {
+      "machine_name": "HEL-046",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.936Z",
+      "current_hour_label": ""
+    },
+    "HEL-047": {
+      "machine_name": "HEL-047",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.960Z",
+      "current_hour_label": ""
+    },
+    "HEL-048": {
+      "machine_name": "HEL-048",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:15.984Z",
+      "current_hour_label": ""
+    },
+    "HEL-049": {
+      "machine_name": "HEL-049",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.008Z",
+      "current_hour_label": ""
+    },
+    "HEL-050": {
+      "machine_name": "HEL-050",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.034Z",
+      "current_hour_label": ""
+    },
+    "HEL-051": {
+      "machine_name": "HEL-051",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.058Z",
+      "current_hour_label": ""
+    },
+    "HEL-052": {
+      "machine_name": "HEL-052",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.100Z",
+      "current_hour_label": ""
+    },
+    "HEL-053": {
+      "machine_name": "HEL-053",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.135Z",
+      "current_hour_label": ""
+    },
+    "HEL-055": {
+      "machine_name": "HEL-055",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.162Z",
+      "current_hour_label": ""
+    },
+    "HEL-056": {
+      "machine_name": "HEL-056",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.191Z",
+      "current_hour_label": ""
+    },
+    "HEL-057": {
+      "machine_name": "HEL-057",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.216Z",
+      "current_hour_label": ""
+    },
+    "LSM-001": {
+      "machine_name": "LSM-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.239Z",
+      "current_hour_label": ""
+    },
+    "LSM-002": {
+      "machine_name": "LSM-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.269Z",
+      "current_hour_label": ""
+    },
+    "LSW-001": {
+      "machine_name": "LSW-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.294Z",
+      "current_hour_label": ""
+    },
+    "LSW-002": {
+      "machine_name": "LSW-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.321Z",
+      "current_hour_label": ""
+    },
+    "LSW-003": {
+      "machine_name": "LSW-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.345Z",
+      "current_hour_label": ""
+    },
+    "LSW-004": {
+      "machine_name": "LSW-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.371Z",
+      "current_hour_label": ""
+    },
+    "LSW-005": {
+      "machine_name": "LSW-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.398Z",
+      "current_hour_label": ""
+    },
+    "LSW-006": {
+      "machine_name": "LSW-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.422Z",
+      "current_hour_label": ""
+    },
+    "LSW-009": {
+      "machine_name": "LSW-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.459Z",
+      "current_hour_label": ""
+    },
+    "LSW-017": {
+      "machine_name": "LSW-017",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.484Z",
+      "current_hour_label": ""
+    },
+    "LSW-019": {
+      "machine_name": "LSW-019",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.509Z",
+      "current_hour_label": ""
+    },
+    "LSW-024": {
+      "machine_name": "LSW-024",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.533Z",
+      "current_hour_label": ""
+    },
+    "LSW-025": {
+      "machine_name": "LSW-025",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.557Z",
+      "current_hour_label": ""
+    },
+    "LSW-026": {
+      "machine_name": "LSW-026",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.581Z",
+      "current_hour_label": ""
+    },
+    "LSW-027": {
+      "machine_name": "LSW-027",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.605Z",
+      "current_hour_label": ""
+    },
+    "LSW-028": {
+      "machine_name": "LSW-028",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.631Z",
+      "current_hour_label": ""
+    },
+    "LSW-029": {
+      "machine_name": "LSW-029",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.669Z",
+      "current_hour_label": ""
+    },
+    "LSW-030": {
+      "machine_name": "LSW-030",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.694Z",
+      "current_hour_label": ""
+    },
+    "LSW-031": {
+      "machine_name": "LSW-031",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.717Z",
+      "current_hour_label": ""
+    },
+    "LSW-032": {
+      "machine_name": "LSW-032",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.740Z",
+      "current_hour_label": ""
+    },
+    "LSW-033": {
+      "machine_name": "LSW-033",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.765Z",
+      "current_hour_label": ""
+    },
+    "LSW-034": {
+      "machine_name": "LSW-034",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.789Z",
+      "current_hour_label": ""
+    },
+    "LSW-035": {
+      "machine_name": "LSW-035",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.813Z",
+      "current_hour_label": ""
+    },
+    "VNS-001": {
+      "machine_name": "VNS-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.836Z",
+      "current_hour_label": ""
+    },
+    "VNS-002": {
+      "machine_name": "VNS-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.860Z",
+      "current_hour_label": ""
+    },
+    "VNS-003": {
+      "machine_name": "VNS-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.883Z",
+      "current_hour_label": ""
+    },
+    "VNS-004": {
+      "machine_name": "VNS-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.907Z",
+      "current_hour_label": ""
+    },
+    "VNS-005": {
+      "machine_name": "VNS-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.931Z",
+      "current_hour_label": ""
+    },
+    "VNS-006": {
+      "machine_name": "VNS-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.957Z",
+      "current_hour_label": ""
+    },
+    "VNS-007": {
+      "machine_name": "VNS-007",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:16.981Z",
+      "current_hour_label": ""
+    },
+    "VNS-008": {
+      "machine_name": "VNS-008",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.004Z",
+      "current_hour_label": ""
+    },
+    "VNS-009": {
+      "machine_name": "VNS-009",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.027Z",
+      "current_hour_label": ""
+    },
+    "VNS-010": {
+      "machine_name": "VNS-010",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.050Z",
+      "current_hour_label": ""
+    },
+    "VNS-012": {
+      "machine_name": "VNS-012",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.071Z",
+      "current_hour_label": ""
+    },
+    "VNS-013": {
+      "machine_name": "VNS-013",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.095Z",
+      "current_hour_label": ""
+    },
+    "VNS-014": {
+      "machine_name": "VNS-014",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.119Z",
+      "current_hour_label": ""
+    },
+    "VNS-015": {
+      "machine_name": "VNS-015",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.142Z",
+      "current_hour_label": ""
+    },
+    "VNS-016": {
+      "machine_name": "VNS-016",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.167Z",
+      "current_hour_label": ""
+    },
+    "VNS-017": {
+      "machine_name": "VNS-017",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.191Z",
+      "current_hour_label": ""
+    },
+    "VNS-018": {
+      "machine_name": "VNS-018",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.215Z",
+      "current_hour_label": ""
+    },
+    "VNS-019": {
+      "machine_name": "VNS-019",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.240Z",
+      "current_hour_label": ""
+    },
+    "VNS-020": {
+      "machine_name": "VNS-020",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.264Z",
+      "current_hour_label": ""
+    },
+    "VNS-021": {
+      "machine_name": "VNS-021",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.289Z",
+      "current_hour_label": ""
+    },
+    "VNS-022": {
+      "machine_name": "VNS-022",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.314Z",
+      "current_hour_label": ""
+    },
+    "VNS-023": {
+      "machine_name": "VNS-023",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.337Z",
+      "current_hour_label": ""
+    },
+    "VNS-024": {
+      "machine_name": "VNS-024",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.362Z",
+      "current_hour_label": ""
+    },
+    "VNS-025": {
+      "machine_name": "VNS-025",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.384Z",
+      "current_hour_label": ""
+    },
+    "VNS-026": {
+      "machine_name": "VNS-026",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.407Z",
+      "current_hour_label": ""
+    },
+    "ACI-001": {
+      "machine_name": "ACI-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.431Z",
+      "current_hour_label": ""
+    },
+    "ACI-002": {
+      "machine_name": "ACI-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.455Z",
+      "current_hour_label": ""
+    },
+    "ACI-003": {
+      "machine_name": "ACI-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.480Z",
+      "current_hour_label": ""
+    },
+    "ASI-001": {
+      "machine_name": "ASI-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.504Z",
+      "current_hour_label": ""
+    },
+    "ASI-002": {
+      "machine_name": "ASI-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.528Z",
+      "current_hour_label": ""
+    },
+    "ASI-003": {
+      "machine_name": "ASI-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.551Z",
+      "current_hour_label": ""
+    },
+    "LSM-003": {
+      "machine_name": "LSM-003",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.575Z",
+      "current_hour_label": ""
+    },
+    "LSM-004": {
+      "machine_name": "LSM-004",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.598Z",
+      "current_hour_label": ""
+    },
+    "LSM-006": {
+      "machine_name": "LSM-006",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.621Z",
+      "current_hour_label": ""
+    },
+    "WSM-001": {
+      "machine_name": "WSM-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.644Z",
+      "current_hour_label": ""
+    },
+    "WSM-002": {
+      "machine_name": "WSM-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.669Z",
+      "current_hour_label": ""
+    },
+    "VCM-001": {
+      "machine_name": "VCM-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.693Z",
+      "current_hour_label": ""
+    },
+    "VCM-002": {
+      "machine_name": "VCM-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.722Z",
+      "current_hour_label": ""
+    },
+    "ARA-002": {
+      "machine_name": "ARA-002",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.746Z",
+      "current_hour_label": ""
+    },
+    "ART-019": {
+      "machine_name": "ART-019",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.770Z",
+      "current_hour_label": ""
+    },
+    "ATX-001": {
+      "machine_name": "ATX-001",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.795Z",
+      "current_hour_label": ""
+    },
+    "LSM-005": {
+      "machine_name": "LSM-005",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.818Z",
+      "current_hour_label": ""
+    },
+    "LSW-021": {
+      "machine_name": "LSW-021",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.843Z",
+      "current_hour_label": ""
+    },
+    "VNS-011": {
+      "machine_name": "VNS-011",
+      "current_hour_actual": 0,
+      "current_hour_ng": 0,
+      "current_hour_station_ng": {},
+      "last_cycle_time": 0,
+      "sum_cycle_time": 0,
+      "last_update": "2026-05-08T07:46:17.869Z",
+      "current_hour_label": ""
+    }
+  },
+  "oeeState": {
+    "ABR-001": {
+      "runTimeSec": 6706.388000000001,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T02:00:00.791Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "ABR-002": {
+      "runTimeSec": 0,
+      "excludedSec": 1,
+      "lastStatus": "Plan_Stop",
+      "lastStatusTime": "2026-05-09T00:00:01.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "ABR-003": {
+      "runTimeSec": 7117.417,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T02:00:01.134Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "AHV-001": {
+      "runTimeSec": 648,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T00:21:20.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "AHV-002": {
+      "runTimeSec": 176,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T00:10:51.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "AHV-003": {
+      "runTimeSec": 1002,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T00:18:51.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "AHV-004": {
+      "runTimeSec": 0,
+      "excludedSec": 0,
+      "lastStatus": "Prod_Check_Master",
+      "lastStatusTime": "2026-05-09T00:00:00.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "AHV-005": {
+      "runTimeSec": 392,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T00:16:16.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    },
+    "AHV-006": {
+      "runTimeSec": 848,
+      "excludedSec": 0,
+      "lastStatus": "Run_Time",
+      "lastStatusTime": "2026-05-09T00:18:00.000Z",
+      "shiftDate": "2026-05-09",
+      "manualNgQty": 0
+    }
+  }
+}

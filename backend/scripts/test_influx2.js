@@ -1,0 +1,1 @@
+const { InfluxDB } = require('influx'); const influx = new InfluxDB('http://192.168.100.99:5012/machine_db'); influx.query('SELECT * FROM data_tb WHERE \"machine_name\"=\'AHV-006\' AND time >= now() - 4h ORDER BY time DESC LIMIT 1').then(console.log).catch(console.error);

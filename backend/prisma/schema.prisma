@@ -1,0 +1,448 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model tbm_operator {
+  id                  Int                  @id @default(autoincrement())
+  operator_name       String
+  emp_no              String               @unique
+  picture_path        String
+  status              String               @default("active")
+  tb_history_workings tb_history_working[]
+}
+
+model tbm_machine {
+  id                Int     @id @default(autoincrement())
+  machine_area      String
+  machine_type      String
+  machine_name      String  @unique
+  status            String  @default("active")
+  full_machine_type String?
+}
+
+model tbm_model {
+  id         Int    @id @default(autoincrement())
+  model_name String
+  status     String
+}
+
+model tbm_model_type {
+  id         Int     @id @default(autoincrement())
+  model_type String?
+  status     String  @default("active")
+}
+
+model tbm_process {
+  id           Int     @id @default(autoincrement())
+  machine_type String
+  process_name String?
+  status       String  @default("active")
+}
+
+model tb_output_target {
+  id                Int      @id @default(autoincrement())
+  date              DateTime @db.Date
+  machine_name      String?
+  model_name        String?
+  pc_target         Int
+  cycle_time_target Float
+  eff_target        Float
+  target_07         Int?     @default(0)
+  target_08         Int?     @default(0)
+  target_09         Int?     @default(0)
+  target_10         Int?     @default(0)
+  target_11         Int?     @default(0)
+  target_12         Int?     @default(0)
+  target_13         Int?     @default(0)
+  target_14         Int?     @default(0)
+  target_15         Int?     @default(0)
+  target_16         Int?     @default(0)
+  target_17         Int?     @default(0)
+  target_18         Int?     @default(0)
+  target_19         Int?     @default(0)
+  target_20         Int?     @default(0)
+  target_21         Int?     @default(0)
+  target_22         Int?     @default(0)
+  target_23         Int?     @default(0)
+  target_00         Int?     @default(0)
+  target_01         Int?     @default(0)
+  target_02         Int?     @default(0)
+  target_03         Int?     @default(0)
+  target_04         Int?     @default(0)
+  target_05         Int?     @default(0)
+  target_06         Int?     @default(0)
+  accum_target      Int?     @default(0)
+  model_type        String?
+  process_name      String?
+  Work_hour         Int?
+
+  @@index([machine_name, date])
+  @@index([machine_name, date, model_name])
+  @@index([date])
+}
+
+model tb_output_actual {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  machine_name String
+  actual_07    Int?     @default(0)
+  actual_08    Int?     @default(0)
+  actual_09    Int?     @default(0)
+  actual_10    Int?     @default(0)
+  actual_11    Int?     @default(0)
+  actual_12    Int?     @default(0)
+  actual_13    Int?     @default(0)
+  actual_14    Int?     @default(0)
+  actual_15    Int?     @default(0)
+  actual_16    Int?     @default(0)
+  actual_17    Int?     @default(0)
+  actual_18    Int?     @default(0)
+  actual_19    Int?     @default(0)
+  actual_20    Int?     @default(0)
+  actual_21    Int?     @default(0)
+  actual_22    Int?     @default(0)
+  actual_23    Int?     @default(0)
+  actual_00    Int?     @default(0)
+  actual_01    Int?     @default(0)
+  actual_02    Int?     @default(0)
+  actual_03    Int?     @default(0)
+  actual_04    Int?     @default(0)
+  actual_05    Int?     @default(0)
+  actual_06    Int?     @default(0)
+  Overall      Int?
+  model_name   String?
+
+  @@unique([machine_name, date, model_name])
+  @@index([date])
+}
+
+model tb_cycle_time_actual {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  machine_name String
+  cycle_07     Float?   @default(0)
+  cycle_08     Float?   @default(0)
+  cycle_09     Float?   @default(0)
+  cycle_10     Float?   @default(0)
+  cycle_11     Float?   @default(0)
+  cycle_12     Float?   @default(0)
+  cycle_13     Float?   @default(0)
+  cycle_14     Float?   @default(0)
+  cycle_15     Float?   @default(0)
+  cycle_16     Float?   @default(0)
+  cycle_17     Float?   @default(0)
+  cycle_18     Float?   @default(0)
+  cycle_19     Float?   @default(0)
+  cycle_20     Float?   @default(0)
+  cycle_21     Float?   @default(0)
+  cycle_22     Float?   @default(0)
+  cycle_23     Float?   @default(0)
+  cycle_00     Float?   @default(0)
+  cycle_01     Float?   @default(0)
+  cycle_02     Float?   @default(0)
+  cycle_03     Float?   @default(0)
+  cycle_04     Float?   @default(0)
+  cycle_05     Float?   @default(0)
+  cycle_06     Float?   @default(0)
+  cycle_time   Float?   @default(0)
+
+  @@unique([machine_name, date])
+  @@index([date])
+}
+
+model tb_efficiency_actual {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  machine_name String
+  eff_07       Float?   @default(0)
+  eff_08       Float?   @default(0)
+  eff_09       Float?   @default(0)
+  eff_10       Float?   @default(0)
+  eff_11       Float?   @default(0)
+  eff_12       Float?   @default(0)
+  eff_13       Float?   @default(0)
+  eff_14       Float?   @default(0)
+  eff_15       Float?   @default(0)
+  eff_16       Float?   @default(0)
+  eff_17       Float?   @default(0)
+  eff_18       Float?   @default(0)
+  eff_19       Float?   @default(0)
+  eff_20       Float?   @default(0)
+  eff_21       Float?   @default(0)
+  eff_22       Float?   @default(0)
+  eff_23       Float?   @default(0)
+  eff_00       Float?   @default(0)
+  eff_01       Float?   @default(0)
+  eff_02       Float?   @default(0)
+  eff_03       Float?   @default(0)
+  eff_04       Float?   @default(0)
+  eff_05       Float?   @default(0)
+  eff_06       Float?   @default(0)
+  eff_actual   Float?   @default(0)
+
+  @@unique([machine_name, date])
+  @@index([date])
+}
+
+model tb_oee {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  machine_name String
+  oee_value    Float?   @default(0)
+  availability Float?   @default(0)
+  ng_qty       Int?     @default(0)
+  performance  Float?   @default(0)
+  quality      Float?   @default(0)
+
+  @@unique([machine_name, date])
+  @@index([date])
+}
+
+model tb_history_working {
+  id           Int           @id @default(autoincrement())
+  date         DateTime      @db.Date
+  machine_name String
+  emp_no       String?
+  shift        String
+  start_time   DateTime
+  end_time     DateTime?
+  tbm_operator tbm_operator? @relation(fields: [emp_no], references: [emp_no])
+
+  @@index([machine_name, date])
+  @@index([emp_no])
+}
+
+model tb_MCStatus {
+  ID       BigInt   @id(map: "PK_tb_MCStatus") @default(autoincrement())
+  Datetime DateTime
+  MC       String   @db.NVarChar(50)
+  MCStatus String   @db.NVarChar(50)
+  UTC_Time DateTime?
+  Remark   String?  @db.NVarChar(255)
+
+  @@index([Datetime])
+}
+
+model tb_MCAlarm {
+  ID       BigInt   @id(map: "PK_tb_MCAlarm") @default(autoincrement())
+  Datetime DateTime
+  MC       String   @db.NVarChar(50)
+  MCAlarm String   @db.NVarChar(255)
+  UTC_Time DateTime?
+
+  @@index([Datetime])
+}
+
+model tb_machine_plan_config {
+  id                Int      @id @default(autoincrement())
+  machine_name      String   @unique
+  eff_target        Float
+  cycle_time_target Float
+  process_name      String?
+  model_name        String?
+  model_type        String?
+  active_hours      String
+  updated_at        DateTime @default(now()) @updatedAt
+  oee_mode          String   @default("manual") @db.NVarChar(10)
+}
+
+model tb_machine_holiday {
+  id           Int      @id @default(autoincrement())
+  machine_name String
+  holiday_date DateTime @db.Date
+  created_at   DateTime @default(now())
+
+  @@unique([machine_name, holiday_date])
+  @@index([machine_name])
+}
+
+model tbm_machine_station {
+  id             Int      @id @default(autoincrement())
+  machine_name   String
+  ng_id          Int
+  station_number Int
+  station_name   String
+  status         String   @default("active")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now())
+
+  @@index([machine_name])
+}
+
+model tb_machine_ng {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  machine_name String
+  station_id   Int      // ✅ FK to tbm_machine_station.id (required)
+  ng_07        Int?     @default(0)
+  ng_08        Int?     @default(0)
+  ng_09        Int?     @default(0)
+  ng_10        Int?     @default(0)
+  ng_11        Int?     @default(0)
+  ng_12        Int?     @default(0)
+  ng_13        Int?     @default(0)
+  ng_14        Int?     @default(0)
+  ng_15        Int?     @default(0)
+  ng_16        Int?     @default(0)
+  ng_17        Int?     @default(0)
+  ng_18        Int?     @default(0)
+  ng_19        Int?     @default(0)
+  ng_20        Int?     @default(0)
+  ng_21        Int?     @default(0)
+  ng_22        Int?     @default(0)
+  ng_23        Int?     @default(0)
+  ng_00        Int?     @default(0)
+  ng_01        Int?     @default(0)
+  ng_02        Int?     @default(0)
+  ng_03        Int?     @default(0)
+  ng_04        Int?     @default(0)
+  ng_05        Int?     @default(0)
+  ng_06        Int?     @default(0)
+  Overall_ng   Int?     @default(0)
+
+  @@unique([machine_name, date, station_id])
+  @@index([machine_name, date])
+  @@index([date])
+}
+
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tb_MCStatus_Duration {
+  MachineName String   @db.NVarChar(50)
+  ModelName   String?  @db.NVarChar(50)
+  StateName   String   @db.NVarChar(100)
+  StartTime   DateTime @db.DateTime
+  EndTime     DateTime @db.DateTime
+  Duration    DateTime @db.Time
+  Criteria    String?  @db.NVarChar(255)
+  Reason      String?  @db.NVarChar(255)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tb_MCStatus_Sum {
+  ID                  Int       @default(autoincrement())
+  FactoryDate         DateTime? @db.Date
+  MachineName         String?   @db.NVarChar(50)
+  ModelName           String?   @db.NVarChar(50)
+  Signal_Lost         DateTime? @db.Time
+  MM_Repair           DateTime? @db.Time
+  Setter_Check_Master DateTime? @db.Time
+  Prod_Check_Master   DateTime? @db.Time
+  MM_Preventive       DateTime? @db.Time
+  QC_Qualify          DateTime? @db.Time
+  Break_Time          DateTime? @db.Time
+  MM_Check_Master     DateTime? @db.Time
+  QC_Check_Master     DateTime? @db.Time
+  Plan_Stop           DateTime? @db.Time
+  Setter_Adjust       DateTime? @db.Time
+  Prod_Cleaning       DateTime? @db.Time
+  Job_Done            DateTime? @db.Time
+  Setter_Preventive   DateTime? @db.Time
+  Wait_Part           DateTime? @db.Time
+  Run_Time            DateTime? @db.Time
+  MC_Stop             DateTime? @db.Time
+  MC_Alarm            DateTime? @db.Time
+  Cut_Lot             DateTime? @db.Time
+
+  @@ignore
+}
+
+model tb_availability_actual {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  machine_name String
+  avail_07     Float?   @default(0)
+  avail_08     Float?   @default(0)
+  avail_09     Float?   @default(0)
+  avail_10     Float?   @default(0)
+  avail_11     Float?   @default(0)
+  avail_12     Float?   @default(0)
+  avail_13     Float?   @default(0)
+  avail_14     Float?   @default(0)
+  avail_15     Float?   @default(0)
+  avail_16     Float?   @default(0)
+  avail_17     Float?   @default(0)
+  avail_18     Float?   @default(0)
+  avail_19     Float?   @default(0)
+  avail_20     Float?   @default(0)
+  avail_21     Float?   @default(0)
+  avail_22     Float?   @default(0)
+  avail_23     Float?   @default(0)
+  avail_00     Float?   @default(0)
+  avail_01     Float?   @default(0)
+  avail_02     Float?   @default(0)
+  avail_03     Float?   @default(0)
+  avail_04     Float?   @default(0)
+  avail_05     Float?   @default(0)
+  avail_06     Float?   @default(0)
+  avail_actual Float?   @default(0)
+
+  @@unique([machine_name, date])
+  @@index([date])
+}
+
+model tb_mc_runtime_hourly {
+  id              Int      @id @default(autoincrement())
+  date            DateTime @db.Date
+  machine_name    String
+  runtime_07      Float?   @default(0)
+  runtime_08      Float?   @default(0)
+  runtime_09      Float?   @default(0)
+  runtime_10      Float?   @default(0)
+  runtime_11      Float?   @default(0)
+  runtime_12      Float?   @default(0)
+  runtime_13      Float?   @default(0)
+  runtime_14      Float?   @default(0)
+  runtime_15      Float?   @default(0)
+  runtime_16      Float?   @default(0)
+  runtime_17      Float?   @default(0)
+  runtime_18      Float?   @default(0)
+  runtime_19      Float?   @default(0)
+  runtime_20      Float?   @default(0)
+  runtime_21      Float?   @default(0)
+  runtime_22      Float?   @default(0)
+  runtime_23      Float?   @default(0)
+  runtime_00      Float?   @default(0)
+  runtime_01      Float?   @default(0)
+  runtime_02      Float?   @default(0)
+  runtime_03      Float?   @default(0)
+  runtime_04      Float?   @default(0)
+  runtime_05      Float?   @default(0)
+  runtime_06      Float?   @default(0)
+  excluded_07     Float?   @default(0)
+  excluded_08     Float?   @default(0)
+  excluded_09     Float?   @default(0)
+  excluded_10     Float?   @default(0)
+  excluded_11     Float?   @default(0)
+  excluded_12     Float?   @default(0)
+  excluded_13     Float?   @default(0)
+  excluded_14     Float?   @default(0)
+  excluded_15     Float?   @default(0)
+  excluded_16     Float?   @default(0)
+  excluded_17     Float?   @default(0)
+  excluded_18     Float?   @default(0)
+  excluded_19     Float?   @default(0)
+  excluded_20     Float?   @default(0)
+  excluded_21     Float?   @default(0)
+  excluded_22     Float?   @default(0)
+  excluded_23     Float?   @default(0)
+  excluded_00     Float?   @default(0)
+  excluded_01     Float?   @default(0)
+  excluded_02     Float?   @default(0)
+  excluded_03     Float?   @default(0)
+  excluded_04     Float?   @default(0)
+  excluded_05     Float?   @default(0)
+  excluded_06     Float?   @default(0)
+  runtime_total   Float?   @default(0)
+  excluded_total  Float?   @default(0)
+
+  @@unique([machine_name, date])
+  @@index([date])
+}
