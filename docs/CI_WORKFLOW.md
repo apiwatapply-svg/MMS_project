@@ -2,6 +2,8 @@
 
 This project uses GitHub Actions to check the application before merge or deployment.
 
+GitHub Actions uses a dummy `DATABASE_URL` only to generate Prisma Client and load backend modules during tests. It does not connect to the real customer SQL Server in CI.
+
 ## CI Steps
 
 1. Checkout source code.

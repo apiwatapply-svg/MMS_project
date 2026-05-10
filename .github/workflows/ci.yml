@@ -9,6 +9,11 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "sqlserver://localhost:1433;database=ci;user=sa;password=Password123;trustServerCertificate=true"
+      ENABLE_MACHINE_IO: "false"
+      ENABLE_CRON_WORKER: "false"
+      DEMO_AUTO_SEED_MSSQL: "false"
 
     steps:
       - name: Checkout
