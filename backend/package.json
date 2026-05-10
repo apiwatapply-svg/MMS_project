@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "node scripts/check_syntax.js",
+    "prisma:generate": "prisma generate",
     "smoke": "node scripts/smoke_health.js",
     "test": "node tests/oeeCalcService.unit.js && node tests/actualOutputService.unit.js && node tests/timeUtils.unit.js && node tests/memoryOeeService.unit.js && node tests/cacheService.unit.js && node tests/planConfigController.unit.js && node tests/oeeUpdateController.unit.js && node tests/autoOnlyPolicy.unit.js && node tests/mqttService.unit.js && node tests/machineNgController.unit.js && node tests/reportDashboardService.unit.js && node tests/frontendDisplay.unit.js",
     "sim:mqtt": "scripts\\run_simulator.cmd",
