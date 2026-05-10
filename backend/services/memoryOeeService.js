@@ -303,12 +303,13 @@ function _resetState(state, newShiftDate) {
  * Shift เริ่ม 07:00 → ถ้าเวลาก่อน 07:00 ให้ใช้วันก่อนหน้า
  */
 function getShiftDateFromThai(thaiDate) {
-    const h = thaiDate.getHours();
-    const date = new Date(thaiDate);
-    if (h < 7) date.setDate(date.getDate() - 1);
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
+    const instant = thaiDate instanceof Date ? thaiDate : new Date(thaiDate);
+    const thaiWallClock = new Date(instant.getTime() + 7 * 60 * 60 * 1000);
+    const h = thaiWallClock.getUTCHours();
+    if (h < 7) thaiWallClock.setUTCDate(thaiWallClock.getUTCDate() - 1);
+    const yyyy = thaiWallClock.getUTCFullYear();
+    const mm = String(thaiWallClock.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(thaiWallClock.getUTCDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 }
 
