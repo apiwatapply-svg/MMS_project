@@ -4,7 +4,41 @@ const { queryNgCount, queryAllMachinesNgCount } = require("../services/influxSer
 const { getShiftDateUTC } = require("../utils/timeUtils");
 const { calcManualNgMetrics } = require("../services/oeeCalcService");
 
-module.exports = {
+function parseDateToUtcMidnight(dateStr) {
+    const parts = dateStr.split("-");
+    return new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
+}
+
+function normalizeNgQty(rawValue, totalOutput) {
+    const parsed = parseInt(rawValue, 10);
+    const ngQty = Number.isFinite(parsed) ? parsed : 0;
+    const maxOutput = Math.max(0, Number(totalOutput) || 0);
+    return Math.max(0, Math.min(ngQty, maxOutput));
+}
+
+function buildRealtimeUpdatePayload(shiftDate, rows, mode = "manual") {
+    const machines = {};
+    for (const row of rows) {
+        machines[row.machine_name] = {
+            daily: {
+                availability: row.availability,
+                performance: row.performance,
+                quality: row.quality,
+                oee: row.oee_value,
+                ngQty: row.ng_qty,
+                oeeMode: mode,
+            },
+        };
+    }
+
+    return {
+        serverTimeUTC: new Date().toISOString(),
+        shiftDate,
+        machines,
+    };
+}
+
+const controller = {
     /**
      * GET /api/oee-update/list?area=xxx&type=xxx
      * รายชื่อเครื่องทั้งหมด + oee_mode + OEE ล่าสุด
@@ -140,15 +174,14 @@ module.exports = {
                 return res.status(400).json({ message: "ต้องระบุ machine_name, date, ng_qty" });
             }
 
-            const parts = date.split("-");
-            const targetDate = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
-            const ngVal = parseInt(ng_qty, 10) || 0;
+            const targetDate = parseDateToUtcMidnight(date);
 
             // Get output actual
             const output = await prisma.tb_output_actual.findFirst({
                 where: { machine_name, date: targetDate },
             });
             const totalOutput = output?.Overall || 0;
+            const ngVal = normalizeNgQty(ng_qty, totalOutput);
 
             // Get existing OEE (availability, performance)
             const existing = await prisma.tb_oee.findFirst({
@@ -229,14 +262,13 @@ module.exports = {
                     if (!date) continue;
 
                     // Parse date safely as UTC midnight
-                    const parts = date.split("-");
-                    const targetDate = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
-                    const ngVal = parseInt(ng_qty, 10) || 0;
+                    const targetDate = parseDateToUtcMidnight(date);
 
                     const output = await prisma.tb_output_actual.findFirst({
                         where: { machine_name, date: targetDate },
                     });
                     const totalOutput = output?.Overall || 0;
+                    const ngVal = normalizeNgQty(ng_qty, totalOutput);
 
                     const existing = await prisma.tb_oee.findFirst({
                         where: { machine_name, date: targetDate },
@@ -380,8 +412,7 @@ module.exports = {
             }
 
             // Parse date as UTC midnight
-            const parts = date.split("-");
-            const targetDate = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
+            const targetDate = parseDateToUtcMidnight(date);
 
             const results = [];
             const errors = [];
@@ -389,12 +420,12 @@ module.exports = {
                 try {
                     const { machine_name, ng_qty } = item;
                     if (!machine_name) continue;
-                    const ngVal = parseInt(ng_qty, 10) || 0;
 
                     const output = await prisma.tb_output_actual.findFirst({
                         where: { machine_name, date: targetDate },
                     });
                     const totalOutput = output?.Overall || 0;
+                    const ngVal = normalizeNgQty(ng_qty, totalOutput);
 
                     const existing = await prisma.tb_oee.findFirst({
                         where: { machine_name, date: targetDate },
@@ -496,3 +527,11 @@ module.exports = {
         }
     },
 };
+
+controller.__private = {
+    parseDateToUtcMidnight,
+    normalizeNgQty,
+    buildRealtimeUpdatePayload,
+};
+
+module.exports = controller;

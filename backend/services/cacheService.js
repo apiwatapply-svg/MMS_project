@@ -519,6 +519,19 @@ async function clearAndRollover() {
     await hydrateFromMSSQL();
 }
 
+function resetForTest() {
+    for (const key of Object.keys(machineCache)) delete machineCache[key];
+    for (const key of Object.keys(targetCache)) delete targetCache[key];
+    for (const key of Object.keys(availabilityCache)) delete availabilityCache[key];
+    for (const key of Object.keys(runtimeCache)) delete runtimeCache[key];
+    for (const key of Object.keys(ngCache)) delete ngCache[key];
+    machineListCache = [];
+}
+
+function setTargetForTest(machineName, dateStr, target) {
+    targetCache[machineName] = { date: dateStr, target };
+}
+
 module.exports = {
     loadMachineList,
     getMachineList,
@@ -543,4 +556,8 @@ module.exports = {
     getNgPastHours,
     isNgHourConfirmed,
     clearAndRollover,
+    __private: {
+        resetForTest,
+        setTargetForTest,
+    },
 };

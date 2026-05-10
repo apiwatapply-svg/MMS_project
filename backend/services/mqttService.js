@@ -22,7 +22,10 @@ function truncateDbText(value, maxLength) {
 }
 
 function isDbValueTooLongError(error) {
-    return String(error?.message || "").includes("too long for the column's type");
+    const message = String(error?.message || "").toLowerCase();
+    return error?.code === "P2000"
+        || message.includes("too long for the column")
+        || message.includes("string or binary data would be truncated");
 }
 
 const getIsUTC = (machineName) => {
@@ -611,5 +614,13 @@ module.exports = {
     restoreMachineStateMem,
     hydrateMqttMemoryFromInflux,
     scheduleResync,
-    updateStateFromMssqlPoller
+    updateStateFromMssqlPoller,
+    __private: {
+        truncateDbText,
+        isDbValueTooLongError,
+        getIsUTC,
+        MC_ALARM_MAX_LENGTH,
+        LEGACY_MC_ALARM_MAX_LENGTH,
+        MC_STATUS_REMARK_MAX_LENGTH,
+    },
 };

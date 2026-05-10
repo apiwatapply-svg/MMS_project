@@ -4,7 +4,33 @@ const dayjs = require("dayjs");
 
 const { getNgMode, sumHourlyFields, calcRejectSummary } = require("../services/oeeCalcService");
 
-module.exports = {
+function applyVisualNgRows(dailyData, oeeRows, machineName, oeeMode) {
+    oeeRows.filter(o => o.machine_name === machineName).forEach(o => {
+        const key = dayjs(o.date).format("YYYY-MM-DD");
+        if (!dailyData[key]) return;
+
+        const visualNg = o.ng_qty;
+        dailyData[key].has_production = true;
+
+        if (visualNg === null || visualNg === undefined) return;
+
+        const userHasNotUpdated = oeeMode === 'manual' && visualNg === 0 && o.quality === 0 && o.oee_value === 0;
+        if (userHasNotUpdated) {
+            dailyData[key].Visual_NG = "-";
+            return;
+        }
+
+        dailyData[key].Visual_NG = visualNg;
+        const overReject = Math.max(0, dailyData[key].All - visualNg);
+        dailyData[key].Over_Reject = overReject;
+
+        const totalOutput = dailyData[key].Total_Output !== "-" ? dailyData[key].Total_Output : 0;
+        dailyData[key].Over_Reject_Percent = calcRejectSummary(totalOutput, overReject).rejectPercent;
+        dailyData[key].Machine_Output = dailyData[key].Total_Output;
+    });
+}
+
+const controller = {
     getMachineNgReport: async (req, res) => {
         try {
             const { month, area, type } = req.query; // month format: YYYY-MM
@@ -156,29 +182,7 @@ module.exports = {
                 });
 
                 // --- Visual NG calculation for every machine type ---
-                oees.filter(o => o.machine_name === mName).forEach(o => {
-                    const key = getDateKey(o.date);
-                    if (dailyData[key]) {
-                        const visualNg = o.ng_qty;
-                        dailyData[key].has_production = true;
-
-                        if (visualNg !== null && visualNg !== undefined) {
-                            const userHasNotUpdated = oeeMode === 'manual' && visualNg === 0 && o.quality === 0 && o.oee_value === 0;
-
-                            if (userHasNotUpdated) {
-                                dailyData[key].Visual_NG = "-";
-                            } else {
-                                dailyData[key].Visual_NG = visualNg;
-                                const overReject = Math.max(0, dailyData[key].All - visualNg);
-                                dailyData[key].Over_Reject = overReject;
-
-                                const totalOutput = dailyData[key].Total_Output !== "-" ? dailyData[key].Total_Output : 0;
-                                dailyData[key].Over_Reject_Percent = calcRejectSummary(totalOutput, overReject).rejectPercent;
-                                dailyData[key].Machine_Output = dailyData[key].Total_Output;
-                            }
-                        }
-                    }
-                });
+                applyVisualNgRows(dailyData, oees, mName, oeeMode);
 
                 return {
                     machine_name: mName,
@@ -201,3 +205,9 @@ module.exports = {
         }
     },
 };
+
+controller.__private = {
+    applyVisualNgRows,
+};
+
+module.exports = controller;
