@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { calculateTargets, HOURS_ORDER } = require("./planConfigController");
+const { calculateTargets, HOURS_ORDER } = require("./PlanConfigController");
 const { recalculateAPQForDay } = require("../services/oeeCalcService");
 module.exports = {
 
