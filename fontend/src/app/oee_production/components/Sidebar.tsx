@@ -67,7 +67,7 @@ export default function Sidebar() {
             }}
         >
             {/* 🔹 โลโก้ */}
-            <a
+            <Link
                 href="/"
                 className="brand-link text-center"
                 style={{
@@ -86,7 +86,7 @@ export default function Sidebar() {
                 >
                     Production System
                 </span>
-            </a>
+            </Link>
 
             {/* 🔹 เมนูหลัก */}
             <div className="sidebar">

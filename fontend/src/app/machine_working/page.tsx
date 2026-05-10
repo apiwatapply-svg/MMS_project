@@ -551,7 +551,7 @@ function MachineWorkingInner() {
             const historyList = resOperator.data.results || [];
 
             // ✅ Combine activeCrossDayOp with historyList
-            let finalOperatorList = [...historyList];
+            const finalOperatorList = [...historyList];
             if (activeCrossDayOp) {
                 // Check for duplicates just in case
                 const exists = finalOperatorList.find((h: any) => h.id === activeCrossDayOp.id);

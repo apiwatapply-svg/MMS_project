@@ -11,7 +11,8 @@ This project uses GitHub Actions to check the application before merge or deploy
 5. Run machine simulator tests with `npm run test:sim`.
 6. Run backend smoke test with `npm run smoke`.
 7. Install frontend dependencies with `npm ci`.
-8. Build the frontend with `npm run build`.
+8. Run frontend lint with `npm run lint`.
+9. Build the frontend with `npm run build`.
 
 ## Why These Steps Matter
 
@@ -19,9 +20,10 @@ This project uses GitHub Actions to check the application before merge or deploy
 - Unit tests protect OEE, output, machine status, report, auto NG, and display logic.
 - Simulator tests protect target-aware machine simulation rules such as cycle time, planned stop, preventive, QC, and NG caps.
 - Smoke test starts the API with machine I/O disabled and verifies `/api/health`.
+- Frontend lint catches Next.js and React code quality issues inside `src`.
 - Frontend build catches TypeScript and Next.js production build problems.
 
-## Current Frontend Lint Status
+## Frontend Lint Policy
 
 Frontend lint is scoped to `src` with:
 
@@ -29,7 +31,7 @@ Frontend lint is scoped to `src` with:
 npm run lint
 ```
 
-It is not yet a required CI gate because the existing frontend has many historical lint issues such as `any`, unused variables, and hook dependency warnings. Keep `npm run build` as the required frontend gate first, then clean lint issues page by page before enabling it in CI.
+It is now a required CI gate. The project still contains historical frontend debt, so the current ESLint policy disables rules that require larger refactors first, such as `any`, unused variables, and hook dependency warnings. Keep this gate enabled, then clean and re-enable stricter rules page by page.
 
 ## Local CI Commands
 
@@ -43,5 +45,6 @@ npm run test:sim
 npm run smoke
 
 cd ../fontend
+npm run lint
 npm run build
 ```

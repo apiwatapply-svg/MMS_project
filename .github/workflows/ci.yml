@@ -47,6 +47,10 @@ jobs:
         working-directory: fontend
         run: npm ci
 
+      - name: Lint frontend
+        working-directory: fontend
+        run: npm run lint
+
       - name: Build frontend
         working-directory: fontend
         run: npm run build

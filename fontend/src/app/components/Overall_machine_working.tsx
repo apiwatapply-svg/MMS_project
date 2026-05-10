@@ -1014,8 +1014,8 @@ export default function OverallMachineCard({
 
     // Dynamic header styling based on liveStatus
     const isToday = typeof window !== "undefined" && date === new Date().toISOString().split("T")[0];
-    let headerBgClass = "bg-primary";
-    let headerStyle: React.CSSProperties = { flexShrink: 0, height: "32px", border: "none", position: "relative" };
+    const headerBgClass = "bg-primary";
+    const headerStyle: React.CSSProperties = { flexShrink: 0, height: "32px", border: "none", position: "relative" };
 
     // ไม่มีการเปลี่ยนสีพื้นหลังเป็น statusColor หรือ Alarm แดงแล้ว เพื่อให้เป็นสีฟ้า (bg-primary) เสมอ
 

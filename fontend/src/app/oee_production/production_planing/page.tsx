@@ -322,7 +322,7 @@ function ProductionPlanningPage() {
     const handleCopyToType = async () => {
         if (!formData.eff_target || !formData.cycle_time_target) { Swal.fire("Warning", "Please input Eff and Cycle Time", "warning"); return; }
         
-        let targetM = machines.find((m: any) => m.machine_name === editingMachine);
+        const targetM = machines.find((m: any) => m.machine_name === editingMachine);
         const currentType = targetM?.machine_type || selectedType;
 
         if (!currentType || currentType === "all") {

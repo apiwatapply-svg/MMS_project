@@ -47,12 +47,12 @@ function UpdateOeePage() {
 
     useEffect(() => {
         if (selectedArea !== "all") fetchTypes(selectedArea);
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (selectedArea !== "all") fetchData();
         else setMachines([]);
-    }, [selectedArea, selectedType]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedArea, selectedType]);
 
     useEffect(() => {
         const socket = getSocket();
