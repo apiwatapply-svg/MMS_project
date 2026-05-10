@@ -221,6 +221,17 @@ app.get("/api/mcstatus/latest-all", mcStatusController.getLatestAll); // 🆕 La
 const configRoutes = require("./routes/configRoutes");
 app.use("/api/config", configRoutes);
 
+// CI/PM2 health check endpoint. Keep this dependency-free so it works when machine I/O is disabled.
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "mms-backend",
+    machineIo: enableMachineIo ? "enabled" : "disabled",
+    cronWorker: enableCronWorker ? "enabled" : "disabled",
+    serverTimeUTC: new Date().toISOString(),
+  });
+});
+
 // 🆕 SERVER TIME ENDPOINT
 app.get("/api/oee/getServerTime", (req, res) => {
   res.json({ serverTimeUTC: new Date().toISOString() });

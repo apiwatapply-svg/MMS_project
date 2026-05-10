@@ -27,9 +27,21 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Check backend syntax
+        working-directory: backend
+        run: npm run lint
+
       - name: Run backend unit tests
         working-directory: backend
         run: npm test
+
+      - name: Run simulator unit tests
+        working-directory: backend
+        run: npm run test:sim
+
+      - name: Run backend smoke test
+        working-directory: backend
+        run: npm run smoke
 
       - name: Install frontend dependencies
         working-directory: fontend

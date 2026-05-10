@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "node scripts/check_syntax.js",
+    "smoke": "node scripts/smoke_health.js",
     "test": "node tests/oeeCalcService.unit.js && node tests/actualOutputService.unit.js && node tests/timeUtils.unit.js && node tests/memoryOeeService.unit.js && node tests/cacheService.unit.js && node tests/planConfigController.unit.js && node tests/oeeUpdateController.unit.js && node tests/autoOnlyPolicy.unit.js && node tests/mqttService.unit.js && node tests/machineNgController.unit.js && node tests/reportDashboardService.unit.js && node tests/frontendDisplay.unit.js",
     "sim:mqtt": "scripts\\run_simulator.cmd",
     "sim:dashboard": "scripts\\run_dashboard.cmd",
-    "test:sim": "scripts\\test_simulator.cmd",
+    "test:sim": "node scripts/test_simulator.js",
     "seed:demo": "node scripts\\seed_demo_until_today.js",
     "seed:demo:startup": "node scripts\\seed_demo_until_today.js --startup"
   },
