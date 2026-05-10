@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import math
+from pathlib import Path
 import random
+import re
 from typing import Any
 
 
-DEFAULT_MACHINES = [
+FALLBACK_MACHINES = [
     {"area": "ECM", "type": "AHV", "name": "AHV-001", "model": "Dorado 10D", "ideal_ct": 4.2},
     {"area": "ECM", "type": "AHV", "name": "AHV-002", "model": "Dorado 10D", "ideal_ct": 4.4},
     {"area": "CLASS100", "type": "ABR", "name": "ABR-001", "model": "V4G", "ideal_ct": 3.5},
@@ -19,6 +21,68 @@ DEFAULT_MACHINES = [
     {"area": "CLASS100", "type": "VNS", "name": "VNS-001", "model": "Vega 11D", "ideal_ct": 5.8},
     {"area": "DLC", "type": "DLC", "name": "DLC-002", "model": "Delta 4D", "ideal_ct": 6.4},
 ]
+
+
+TYPE_CT = {
+    "ABR": 3.5,
+    "ACP": 4.1,
+    "ACR": 5.0,
+    "AHV": 4.2,
+    "DLC": 6.4,
+    "GE2": 3.4,
+    "GE3": 3.8,
+    "HEL": 4.0,
+    "LSW": 4.7,
+    "VNS": 5.8,
+}
+
+
+def infer_machine_type(machine_name: str) -> str:
+    if "-" in machine_name:
+        return machine_name.split("-", 1)[0]
+    match = re.match(r"[A-Za-z]+", machine_name)
+    return match.group(0).upper() if match else "SIM"
+
+
+def load_layout_machines() -> list[dict[str, Any]]:
+    layout_file = Path(__file__).resolve().parents[2] / "fontend" / "src" / "app" / "oee_production" / "layout_dashboard" / "page.tsx"
+    if not layout_file.exists():
+        return FALLBACK_MACHINES
+
+    machines: list[dict[str, Any]] = []
+    area = ""
+    inside_positions = False
+    for line in layout_file.read_text(encoding="utf-8").splitlines():
+        if "const MACHINE_POSITIONS" in line:
+            inside_positions = True
+            continue
+        if inside_positions and line.strip().startswith("};"):
+            break
+        if not inside_positions:
+            continue
+
+        area_match = re.match(r"\s*([A-Z0-9]+):\s*{", line)
+        if area_match:
+            area = area_match.group(1)
+
+        for match in re.finditer(r"'([^']+)'\s*:\s*{\s*row:\s*(\d+)\s*,\s*col:\s*(\d+)\s*}", line):
+            name = match.group(1)
+            machine_type = infer_machine_type(name)
+            row = int(match.group(2))
+            col = int(match.group(3))
+            machines.append({
+                "area": area,
+                "type": machine_type,
+                "name": name,
+                "model": f"{machine_type} model",
+                "ideal_ct": TYPE_CT.get(machine_type, 5.0),
+                "layout": {"row": row, "col": col},
+            })
+
+    return machines or FALLBACK_MACHINES
+
+
+DEFAULT_MACHINES = load_layout_machines()
 
 
 @dataclass(frozen=True)

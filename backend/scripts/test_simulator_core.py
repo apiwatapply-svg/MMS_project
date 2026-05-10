@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from simulator_core import (
     MachineRuntimeState,
+    DEFAULT_MACHINES,
     SimulationProfile,
     calculate_expected_metrics,
     calculate_hourly_target,
@@ -15,6 +16,11 @@ from simulator_core import (
 
 
 class SimulatorCoreTests(unittest.TestCase):
+    def test_layout_machine_master_loads_all_layout_positions(self):
+        self.assertGreater(len(DEFAULT_MACHINES), 10)
+        self.assertEqual(len(DEFAULT_MACHINES), 204)
+        self.assertTrue(all("layout" in machine for machine in DEFAULT_MACHINES))
+
     def test_hourly_target_uses_operating_time_ideal_ct_and_efficiency(self):
         self.assertEqual(
             calculate_hourly_target(ideal_ct=4.0, efficiency_target=90, planned_stop_seconds=600),

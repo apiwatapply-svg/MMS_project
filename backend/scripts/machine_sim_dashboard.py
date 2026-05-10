@@ -128,6 +128,7 @@ class SimulatorRunner:
                     "type": machine["type"],
                     "model": machine["model"],
                     "ideal_ct": machine["ideal_ct"],
+                    "layout": machine.get("layout"),
                     "target_per_hour": calculate_hourly_target(
                         machine["ideal_ct"],
                         100,
@@ -293,26 +294,32 @@ HTML = """
     .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
     .kpi { background: #0d1b2e; border: 1px solid #203650; border-radius: 8px; padding: 12px; }
     .kpi b { display: block; font-size: 24px; margin-top: 4px; }
-    .machine-grid { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; }
-    .machine { border: 2px solid #30465e; border-radius: 8px; min-height: 136px; padding: 10px; background: #102037; cursor: pointer; display: grid; gap: 7px; position: relative; }
+    .machine-grid { display: grid; grid-template-columns: repeat(21, minmax(42px, 1fr)); grid-template-rows: 26px repeat(15, minmax(42px, 1fr)); gap: 3px; min-height: calc(100vh - 215px); background: #e5e7eb; border: 1px solid #94a3b8; border-radius: 8px; padding: 8px; overflow: auto; }
+    .area-bg { border: 1px solid var(--area-border); background: var(--area-body); border-radius: 6px; z-index: 0; }
+    .area-label { align-self: start; background: var(--area-header); color: white; font-weight: 800; font-size: clamp(7px, .65vw, 12px); padding: 2px 6px; border-radius: 6px 6px 0 0; z-index: 2; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .machine-cell { z-index: 1; padding: 1px; min-width: 0; min-height: 0; }
+    .machine { border: 1px solid #9e9e9e; border-radius: 4px; min-height: 0; height: 100%; padding: 0; background: #f5f5f5; color: #111827; cursor: pointer; display: flex; flex-direction: column; gap: 0; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
     .machine.selected { outline: 3px solid #f7c948; }
     .machine.off { opacity: .45; }
-    .machine.Run_Time { border-color: #17b26a; box-shadow: inset 0 0 0 1px rgba(23,178,106,.35); }
-    .machine.Plan_Stop, .machine.Break_Time, .machine.Preventive, .machine.QC { border-color: #f7c948; }
-    .machine.Stop_Time { border-color: #8b9bb0; }
+    .machine.Run_Time { border-color: #2e7d32; background: #e8f5e9; }
+    .machine.Plan_Stop, .machine.Break_Time, .machine.Preventive, .machine.QC { border-color: #424242; background: #d5d5d5; }
+    .machine.Stop_Time { border-color: #c62828; background: #ffebee; }
     .machine.MC_Alarm { border-color: #f04438; animation: pulse 1s infinite; }
     @keyframes pulse { 50% { box-shadow: 0 0 22px rgba(240,68,56,.5); } }
-    .name { font-size: 18px; font-weight: 800; }
-    .status { font-weight: 800; font-size: 13px; padding: 5px 7px; border-radius: 5px; background: rgba(255,255,255,.08); width: max-content; }
-    .numbers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; font-size: 12px; }
-    .numbers span { color: #9fb1c9; }
+    .machine.Run_Time .name { background: #2e7d32; }
+    .machine.Plan_Stop .name, .machine.Break_Time .name, .machine.Preventive .name, .machine.QC .name { background: #424242; }
+    .machine.Stop_Time .name, .machine.MC_Alarm .name { background: #c62828; }
+    .name { font-size: clamp(6px, .55vw, 10px); font-weight: 800; background: #bdbdbd; color: white; padding: 1px 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status { font-weight: 800; font-size: clamp(5px, .45vw, 8px); padding: 1px 2px; width: auto; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .numbers { display: grid; grid-template-columns: 1fr 1fr; gap: 0 3px; font-size: clamp(5px, .45vw, 8px); padding: 0 2px 1px; line-height: 1.1; }
+    .numbers span { color: #374151; }
     aside { border-left: 1px solid #203650; background: #0b1728; padding: 18px; display: grid; align-content: start; gap: 14px; }
     .panel { background: #102037; border: 1px solid #203650; border-radius: 8px; padding: 14px; display: grid; gap: 12px; }
     label { display: grid; gap: 6px; font-size: 13px; color: #b4c2d5; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .legend { display: grid; gap: 8px; font-size: 13px; }
     .dot { display: inline-block; width: 11px; height: 11px; border-radius: 99px; margin-right: 6px; vertical-align: middle; }
-    @media (max-width: 1100px) { main { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 1px solid #203650; } .machine-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
+    @media (max-width: 1100px) { main { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 1px solid #203650; } }
     @media (max-width: 650px) { .machine-grid, .kpis { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
@@ -372,6 +379,24 @@ HTML = """
 let latest = null;
 let selected = null;
 let machineConfigs = {};
+const AREA_LAYOUT = {
+  DLC: { colStart: 1, colEnd: 4, rowStart: 1, rowEnd: 10, title: 'DLC Area' },
+  ECM: { colStart: 4, colEnd: 7, rowStart: 1, rowEnd: 10, title: 'ECM Area' },
+  CLASS1000: { colStart: 1, colEnd: 7, rowStart: 11, rowEnd: 16, title: 'Class 1000 Area' },
+  CLASS100: { colStart: 7, colEnd: 22, rowStart: 1, rowEnd: 17, title: 'Class 100 Area' },
+};
+const AREA_OFFSET = {
+  DLC: { colOffset: 1, rowOffset: 2 },
+  ECM: { colOffset: 4, rowOffset: 2 },
+  CLASS1000: { colOffset: 1, rowOffset: 11 },
+  CLASS100: { colOffset: 7, rowOffset: 2 },
+};
+const AREA_THEME = {
+  DLC: { header: '#0284c7', body: '#f0f9ff', border: '#bae6fd' },
+  ECM: { header: '#9333ea', body: '#faf5ff', border: '#e9d5ff' },
+  CLASS1000: { header: '#ea580c', body: '#fff7ed', border: '#fed7aa' },
+  CLASS100: { header: '#0d9488', body: '#f0fdfa', border: '#99f6e4' },
+};
 
 function statusClass(status) { return (status || 'Stop_Time').replace(/[^A-Za-z0-9_]/g, '_'); }
 
@@ -390,27 +415,37 @@ async function getStatus() {
 
 function renderMachines() {
   const box = document.getElementById('machines');
-  box.innerHTML = latest.targets.map(row => {
+  const areaLayers = Object.entries(AREA_LAYOUT).flatMap(([area, layout]) => {
+    const theme = AREA_THEME[area];
+    return [
+      `<div class="area-bg" style="grid-column:${layout.colStart}/${layout.colEnd};grid-row:${layout.rowStart}/${layout.rowEnd};--area-body:${theme.body};--area-border:${theme.border};"></div>`,
+      `<div class="area-label" style="grid-column:${layout.colStart}/${layout.colEnd};grid-row:${layout.rowStart};--area-header:${theme.header};">${layout.title}</div>`
+    ];
+  });
+  const machineLayers = latest.targets.map(row => {
     const cfg = machineConfigs[row.machine] || row.config || {};
     machineConfigs[row.machine] = { ...cfg };
     const liveStatus = latest.stats.last_status[row.machine] || cfg.status || 'Offline';
     const state = row.state || {};
     const metrics = state.metrics || {};
     const disabled = cfg.enabled === false || cfg.enabled === 'false';
-    return `<div class="machine ${disabled ? 'off' : ''} ${statusClass(liveStatus)} ${selected === row.machine ? 'selected' : ''}" onclick="selectMachine('${row.machine}')">
+    const offset = AREA_OFFSET[row.area] || { colOffset: 1, rowOffset: 2 };
+    const layout = row.layout || { row: 0, col: 0 };
+    const gridCol = layout.col + offset.colOffset;
+    const gridRow = layout.row + offset.rowOffset;
+    return `<div class="machine-cell" style="grid-column:${gridCol};grid-row:${gridRow};">
+    <div class="machine ${disabled ? 'off' : ''} ${statusClass(liveStatus)} ${selected === row.machine ? 'selected' : ''}" onclick="selectMachine('${row.machine}')">
       <div class="name">${row.machine}</div>
-      <div class="muted">${row.area} / ${row.type} / ${row.model}</div>
       <div class="status">${disabled ? 'Disabled' : liveStatus}</div>
       <div class="numbers">
         <div><span>OUT</span><br><b>${state.output || 0}</b></div>
         <div><span>NG</span><br><b>${state.ng || 0}</b></div>
-        <div><span>OK</span><br><b>${state.ok || 0}</b></div>
-        <div><span>Target/hr</span><br><b>${row.target_per_hour}</b></div>
         <div><span>CT</span><br><b>${row.ideal_ct}s</b></div>
         <div><span>OEE</span><br><b>${metrics.oee || 0}%</b></div>
       </div>
-    </div>`;
-  }).join('');
+    </div></div>`;
+  });
+  box.innerHTML = [...areaLayers, ...machineLayers].join('');
 }
 
 function selectMachine(name) {
