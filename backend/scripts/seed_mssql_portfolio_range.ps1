@@ -217,7 +217,7 @@ function Seed-Machine-Day($conn, $tx, $machine, [datetime]$date, [int]$dayIndex,
 
   $targetParams = @{} + $baseParams
   $targetParams.pc_target = $profile.targetTotal
-  $targetParams.cycle_time_target = $profile.avgCt
+  $targetParams.cycle_time_target = $profile.idealCt
   $targetParams.eff_target = $profile.effTarget
   $targetParams.accum_target = $profile.targetTotal
   $targetParams.model_type = $machine.machine_type
