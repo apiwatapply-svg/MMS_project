@@ -163,18 +163,9 @@ module.exports = {
             let targetDate = date ? new Date(date) : new Date();
             let endOfTargetDay = new Date(targetDate);
 
-            // ✅ Check if machine is manual
-            const isManual = false;
             
             const serverTodayStr = getShiftDateUTC();
             const serverToday = new Date(serverTodayStr);
-
-            // สำหรับเครื่อง manual, วันนี้ยังไม่มียอด NG ดังนั้นให้ดึงค่า OEE ของเมื่อวานแทน
-            if (isManual && targetDate >= serverToday) {
-                let yesterday = new Date(serverToday);
-                yesterday.setDate(yesterday.getDate() - 1);
-                endOfTargetDay = yesterday;
-            }
 
             if (targetDate < serverToday) {
                 // 🔹 กรณีดูข้อมูลย้อนหลัง: บังคับให้หาเฉพาะ "วันนั้น" เท่านั้น (ไม่ Fallback ไปวันก่อนหน้า)
@@ -348,18 +339,9 @@ module.exports = {
             // ✅ Logic: หา OEE ของ "วันที่เลือก" (Selected Date)
             let endOfTargetDay = new Date(targetDate);
 
-            // ✅ Check if machine is manual
-            const isManual = false;
             
             const serverTodayStrTable = getShiftDateUTC();
             const serverTodayTable = new Date(serverTodayStrTable);
-
-            // สำหรับเครื่อง manual, วันนี้ยังไม่มียอด NG ดังนั้นให้ดึงค่า OEE ของเมื่อวานแทน
-            if (isManual && targetDate >= serverTodayTable) {
-                let yesterday = new Date(serverTodayTable);
-                yesterday.setDate(yesterday.getDate() - 1);
-                endOfTargetDay = yesterday;
-            }
 
             endOfTargetDay.setHours(23, 59, 59, 999);
 
@@ -367,7 +349,7 @@ module.exports = {
                 where: {
                     machine_name,
                     oee_value: { gt: 0 },
-                    date: { lte: endOfTargetDay } // ✅ Filter by selected date (or yesterday for manual)
+                    date: { lte: endOfTargetDay }
                 },
                 orderBy: { date: "desc" },
             });

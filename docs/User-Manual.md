@@ -42,7 +42,7 @@ Use the main dashboard to check current production condition.
 1. Open the OEE update page.
 2. Select area and machine type.
 3. Review actual output, auto NG quantity, availability, performance, quality, and OEE.
-4. NG is calculated from machine data automatically; no manual NG entry is required.
+4. NG is calculated from machine data automatically; no operator entry is required.
 5. Confirm the realtime values match the machine condition.
 
 ## 7. Machine Status Timeline

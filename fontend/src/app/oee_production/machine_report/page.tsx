@@ -170,18 +170,15 @@ function MachineReportPage() {
                 const socketData = socketMachines[machine.machine_name];
                 if (!socketData?.daily) return machine;
 
-                const isAuto = machine.oee_mode === "auto";
                 const updatedDailyData = { ...machine.daily_data };
                 const existing = updatedDailyData[shiftDate] || {};
                 updatedDailyData[shiftDate] = {
                     ...existing,
                     ...((socketData.daily.availability || 0) > 0 && { availability: socketData.daily.availability }),
                     ...(socketData.daily.performance !== undefined && socketData.daily.performance > 0 && { performance: socketData.daily.performance }),
-                    ...(isAuto ? {
-                        ng_qty: socketData.daily.ngQty ?? 0,
-                        ...((socketData.daily.quality || 0) > 0 && { quality: socketData.daily.quality }),
-                        ...((socketData.daily.oee || 0) > 0 && { oee: socketData.daily.oee }),
-                    } : {}),
+                    ng_qty: socketData.daily.ngQty ?? 0,
+                    ...((socketData.daily.quality || 0) > 0 && { quality: socketData.daily.quality }),
+                    ...((socketData.daily.oee || 0) > 0 && { oee: socketData.daily.oee }),
                 };
 
                 return { ...machine, daily_data: updatedDailyData };

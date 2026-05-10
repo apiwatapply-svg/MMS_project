@@ -169,7 +169,7 @@ function MachineNgReportPage() {
         ...stations.map(station => ({ label: station, key: station, isStation: true, showZero: false })),
         { label: "Total Output", key: "Total_Output", isStation: false, showZero: true },
         { label: "NG Total (All Station)", key: "All", isStation: false, showZero: false },
-        { label: "Auto NG", key: "Visual_NG", isStation: false, showZero: true },
+        { label: "NG Qty", key: "Visual_NG", isStation: false, showZero: true },
     ];
 
     const isHoliday = (machine: MachineNgReport, day: number) => {
@@ -202,7 +202,7 @@ function MachineNgReportPage() {
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h2 className="mb-1">Machine NG Report</h2>
-                    <div className="text-muted small">Auto NG from machine data only. Over Reject is not used.</div>
+                    <div className="text-muted small">NG is calculated automatically from machine data and updates in realtime.</div>
                 </div>
                 <div className="text-end small">
                     <div className={socketConnected ? "text-success" : "text-danger"}>{socketConnected ? "Realtime connected" : "Realtime disconnected"}</div>
