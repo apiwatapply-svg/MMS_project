@@ -82,6 +82,35 @@ class SimulatorCoreTests(unittest.TestCase):
 
         self.assertEqual([p["name"] for p in events], ["status_tb"])
         self.assertEqual(events[0]["fields"]["Status"], "Plan_Stop")
+        self.assertEqual(state.output_count, 0)
+        self.assertEqual(state.ng_count, 0)
+
+    def test_ng_count_is_randomized_but_capped_by_configured_rate(self):
+        profile = SimulationProfile(
+            name="stable",
+            availability=100,
+            performance=100,
+            quality=100,
+            planned_stop_seconds_per_hour=0,
+            ng_rate_pct=5,
+        )
+        machine = {
+            "area": "ECM",
+            "type": "AHV",
+            "name": "AHV-001",
+            "model": "Dorado 10D",
+            "ideal_ct": 1.0,
+        }
+        state = create_machine_state(machine)
+
+        events = generate_machine_events(machine, state, profile, elapsed_seconds=1000.0, seq_base=100)
+        output_events = [p for p in events if p["name"] == "data_tb"]
+        ng_events = [p for p in output_events if p["fields"]["ng_indicator"] == "NG"]
+
+        self.assertEqual(state.output_count, len(output_events))
+        self.assertEqual(state.ng_count, len(ng_events))
+        self.assertLessEqual(state.ng_count, int(state.output_count * 0.05))
+        self.assertEqual(state.output_count, (state.output_count - state.ng_count) + state.ng_count)
 
 
 if __name__ == "__main__":

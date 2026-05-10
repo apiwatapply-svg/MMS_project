@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import threading
 import time
 import urllib.parse
@@ -32,9 +33,6 @@ DEFAULT_CONFIG = {
     "machine_count": 8,
     "interval": 1.0,
     "scenario": "stable",
-    "availability": SCENARIOS["stable"].availability,
-    "performance": SCENARIOS["stable"].performance,
-    "quality": SCENARIOS["stable"].quality,
     "planned_stop_seconds_per_hour": SCENARIOS["stable"].planned_stop_seconds_per_hour,
 }
 
@@ -46,10 +44,8 @@ def default_machine_configs() -> dict[str, dict[str, Any]]:
             "enabled": True,
             "status": "auto",
             "interval": DEFAULT_CONFIG["interval"],
-            "availability": DEFAULT_CONFIG["availability"],
-            "performance": DEFAULT_CONFIG["performance"],
-            "quality": DEFAULT_CONFIG["quality"],
             "planned_stop_seconds_per_hour": DEFAULT_CONFIG["planned_stop_seconds_per_hour"],
+            "ng_rate_pct": round(random.uniform(0, 5), 2),
         }
     return configs
 
@@ -62,6 +58,7 @@ class SimulatorRunner:
         self.running = False
         self.config = DEFAULT_CONFIG.copy()
         self.machine_configs = default_machine_configs()
+        self.machine_states: dict[str, Any] = {}
         self.stats = {
             "batches": 0,
             "output": 0,
@@ -80,6 +77,8 @@ class SimulatorRunner:
             for machine_name, item in (config.get("machine_configs") or {}).items():
                 if machine_name in self.machine_configs:
                     self.machine_configs[machine_name] = {**self.machine_configs[machine_name], **item}
+                    if "ng_rate_pct" not in self.machine_configs[machine_name]:
+                        self.machine_configs[machine_name]["ng_rate_pct"] = round(random.uniform(0, 5), 2)
             self.stats = {
                 "batches": 0,
                 "output": 0,
@@ -107,13 +106,17 @@ class SimulatorRunner:
             target_rows = [
                 {
                     "machine": machine["name"],
+                    "area": machine["area"],
+                    "type": machine["type"],
+                    "model": machine["model"],
                     "ideal_ct": machine["ideal_ct"],
                     "target_per_hour": calculate_hourly_target(
                         machine["ideal_ct"],
-                        float(self.machine_configs[machine["name"]]["performance"]),
+                        100,
                         int(self.machine_configs[machine["name"]]["planned_stop_seconds_per_hour"]),
                     ),
                     "config": self.machine_configs[machine["name"]],
+                    "state": self.machine_summary(machine),
                 }
                 for machine in machines
             ]
@@ -125,21 +128,51 @@ class SimulatorRunner:
                 "scenarios": {name: profile.__dict__ for name, profile in SCENARIOS.items()},
             }
 
+    def machine_summary(self, machine: dict[str, Any]) -> dict[str, Any]:
+        state = self.machine_states.get(machine["name"])
+        if not state:
+            return {
+                "output": 0,
+                "ok": 0,
+                "ng": 0,
+                "metrics": {"availability": 0, "performance": 0, "quality": 0, "oee": 0},
+            }
+        metrics = calculate_expected_metrics(
+            total_seconds=state.total_seconds,
+            run_seconds=state.run_seconds,
+            excluded_seconds=state.excluded_seconds,
+            output_qty=state.output_count,
+            ng_qty=state.ng_count,
+            ideal_ct=float(machine["ideal_ct"]),
+        )
+        return {
+            "output": state.output_count,
+            "ok": max(0, state.output_count - state.ng_count),
+            "ng": state.ng_count,
+            "run_seconds": round(state.run_seconds, 1),
+            "excluded_seconds": round(state.excluded_seconds, 1),
+            "total_seconds": round(state.total_seconds, 1),
+            "metrics": metrics,
+        }
+
     def _run(self) -> None:
         client = None
         try:
             config = self.config.copy()
             machines = DEFAULT_MACHINES[: int(config["machine_count"])]
             states = {machine["name"]: create_machine_state(machine) for machine in machines}
+            with self.lock:
+                self.machine_states = states
             machine_configs = self.machine_configs.copy()
             profiles = {
                 machine["name"]: get_profile(
                     str(config["scenario"]),
-                    availability=float(machine_configs[machine["name"]]["availability"]),
-                    performance=float(machine_configs[machine["name"]]["performance"]),
-                    quality=float(machine_configs[machine["name"]]["quality"]),
+                    availability=100,
+                    performance=100,
+                    quality=100,
                     planned_stop_seconds_per_hour=int(machine_configs[machine["name"]]["planned_stop_seconds_per_hour"]),
                     force_status=machine_configs[machine["name"]]["status"],
+                    ng_rate_pct=float(machine_configs[machine["name"]].get("ng_rate_pct", random.uniform(0, 5))),
                 )
                 for machine in machines
             }
@@ -181,12 +214,10 @@ class SimulatorRunner:
                                 ng_this_batch += 1
 
                 elapsed = max(1.0, time.time() - start_time)
-                active_profiles = [profiles[m["name"]] for m in machines if machine_configs[m["name"]].get("enabled", True)]
-                elapsed_machine_seconds = elapsed * max(1, len(active_profiles))
-                avg_availability = sum(p.availability for p in active_profiles) / len(active_profiles) if active_profiles else 0
-                avg_planned_stop = sum(p.planned_stop_seconds_per_hour for p in active_profiles) / len(active_profiles) if active_profiles else 0
-                run_seconds = elapsed_machine_seconds * (avg_availability / 100.0)
-                excluded_seconds = elapsed_machine_seconds * (avg_planned_stop / 3600.0)
+                active_states = [states[m["name"]] for m in machines if machine_configs[m["name"]].get("enabled", True)]
+                elapsed_machine_seconds = sum(s.total_seconds for s in active_states) or elapsed
+                run_seconds = sum(s.run_seconds for s in active_states)
+                excluded_seconds = sum(s.excluded_seconds for s in active_states)
                 avg_ideal_ct = sum(float(m["ideal_ct"]) for m in machines) / len(machines)
 
                 with self.lock:
@@ -224,146 +255,191 @@ HTML = """
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MMS Machine Simulator</title>
+  <title>MMS GOT Machine Simulator</title>
   <style>
-    :root { color-scheme: dark; font-family: Arial, sans-serif; background: #07111f; color: #e6edf7; }
-    body { margin: 0; padding: 24px; }
-    main { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
-    section { background: #101c2d; border: 1px solid #24354d; border-radius: 8px; padding: 18px; }
-    h1, h2 { margin: 0 0 14px; }
-    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-    label { display: grid; gap: 6px; font-size: 13px; color: #aab8ce; }
-    input, select, button { border-radius: 6px; border: 1px solid #334963; padding: 10px; background: #07111f; color: #e6edf7; }
+    :root { color-scheme: dark; font-family: Arial, sans-serif; background: #06101d; color: #edf4ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #06101d; }
+    main { display: grid; grid-template-columns: 1fr 340px; min-height: 100vh; }
+    .board { padding: 18px; display: grid; gap: 14px; align-content: start; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: #0d1b2e; border: 1px solid #203650; border-radius: 8px; }
+    h1 { margin: 0; font-size: 20px; }
+    .muted { color: #9fb1c9; }
+    .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    input, select, button { border-radius: 6px; border: 1px solid #334d6a; padding: 9px; background: #07111f; color: #edf4ff; }
     button { cursor: pointer; font-weight: 700; }
-    button.start { background: #11875d; border-color: #21a574; }
-    button.stop { background: #9f2d3d; border-color: #c9485a; }
-    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-    .card { background: #07111f; border: 1px solid #24354d; border-radius: 8px; padding: 14px; }
-    .value { font-size: 28px; font-weight: 800; margin-top: 8px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 9px; border-bottom: 1px solid #24354d; text-align: left; }
-    td input, td select { width: 100%; min-width: 76px; padding: 7px; }
-    td .check { min-width: 18px; width: 18px; }
-    .muted { color: #8fa1ba; }
-    @media (max-width: 900px) { .grid, .cards { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 560px) { .grid, .cards { grid-template-columns: 1fr; } }
+    button.start { background: #107a55; border-color: #21a574; }
+    button.stop { background: #9b2838; border-color: #c9485a; }
+    .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .kpi { background: #0d1b2e; border: 1px solid #203650; border-radius: 8px; padding: 12px; }
+    .kpi b { display: block; font-size: 24px; margin-top: 4px; }
+    .machine-grid { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; }
+    .machine { border: 2px solid #30465e; border-radius: 8px; min-height: 136px; padding: 10px; background: #102037; cursor: pointer; display: grid; gap: 7px; position: relative; }
+    .machine.selected { outline: 3px solid #f7c948; }
+    .machine.off { opacity: .45; }
+    .machine.Run_Time { border-color: #17b26a; box-shadow: inset 0 0 0 1px rgba(23,178,106,.35); }
+    .machine.Plan_Stop, .machine.Break_Time { border-color: #f7c948; }
+    .machine.Stop_Time { border-color: #8b9bb0; }
+    .machine.MC_Alarm { border-color: #f04438; animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { box-shadow: 0 0 22px rgba(240,68,56,.5); } }
+    .name { font-size: 18px; font-weight: 800; }
+    .status { font-weight: 800; font-size: 13px; padding: 5px 7px; border-radius: 5px; background: rgba(255,255,255,.08); width: max-content; }
+    .numbers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; font-size: 12px; }
+    .numbers span { color: #9fb1c9; }
+    aside { border-left: 1px solid #203650; background: #0b1728; padding: 18px; display: grid; align-content: start; gap: 14px; }
+    .panel { background: #102037; border: 1px solid #203650; border-radius: 8px; padding: 14px; display: grid; gap: 12px; }
+    label { display: grid; gap: 6px; font-size: 13px; color: #b4c2d5; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .legend { display: grid; gap: 8px; font-size: 13px; }
+    .dot { display: inline-block; width: 11px; height: 11px; border-radius: 99px; margin-right: 6px; vertical-align: middle; }
+    @media (max-width: 1100px) { main { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 1px solid #203650; } .machine-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
+    @media (max-width: 650px) { .machine-grid, .kpis { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
 <main>
-  <section>
-    <h1>MMS Machine Simulator</h1>
-    <p class="muted">Control MQTT + InfluxDB machine telemetry with target-aware OEE simulation.</p>
-    <div class="grid">
-      <label>Scenario<select id="scenario"></select></label>
-      <label>Machines<input id="machine_count" type="number" min="1" max="10" value="8"></label>
-      <label>Interval seconds<input id="interval" type="number" min="0.2" step="0.1" value="1"></label>
-      <label>Planned stop sec/hr<input id="planned_stop_seconds_per_hour" type="number" min="0" max="3600" value="120"></label>
-      <label>Availability %<input id="availability" type="number" min="0" max="100" step="0.1" value="95"></label>
-      <label>Performance %<input id="performance" type="number" min="0" max="150" step="0.1" value="96"></label>
-      <label>Quality %<input id="quality" type="number" min="0" max="100" step="0.1" value="98.5"></label>
-      <label>MQTT URL<input id="mqtt_url" value="mqtt://127.0.0.1:1883"></label>
+  <section class="board">
+    <div class="topbar">
+      <div>
+        <h1>MMS Machine Simulator GOT</h1>
+        <div id="state" class="muted">Loading...</div>
+      </div>
+      <div class="toolbar">
+        <label class="muted">Machines <input id="machine_count" type="number" min="1" max="10" value="10" style="width:76px"></label>
+        <button class="start" onclick="startSim()">Start</button>
+        <button class="stop" onclick="stopSim()">Stop</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span class="muted">Output</span><b id="out">0</b></div>
+      <div class="kpi"><span class="muted">NG</span><b id="ng">0</b></div>
+      <div class="kpi"><span class="muted">Availability</span><b id="a">0%</b></div>
+      <div class="kpi"><span class="muted">Performance</span><b id="p">0%</b></div>
+      <div class="kpi"><span class="muted">OEE</span><b id="oee">0%</b></div>
+    </div>
+    <div id="machines" class="machine-grid"></div>
+  </section>
+  <aside>
+    <div class="panel">
+      <h2 id="panel-title" style="margin:0">Select Machine</h2>
+      <label>Enable <select id="mc-enabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></label>
+      <label>Status <select id="mc-status"><option>auto</option><option>Run_Time</option><option>Plan_Stop</option><option>Stop_Time</option><option>MC_Alarm</option><option>Break_Time</option></select></label>
+      <div class="row">
+        <label>Send interval (sec)<input id="mc-interval" type="number" min="0.2" step="0.1" value="1"></label>
+        <label>Planned stop sec/hr<input id="mc-plan" type="number" min="0" max="3600" value="120"></label>
+      </div>
+      <div class="row">
+        <label>MQTT<input id="mqtt_url" value="mqtt://127.0.0.1:1883"></label>
+        <label>Influx DB<input id="influx_database" value="machine_db"></label>
+      </div>
       <label>Influx URL<input id="influx_url" value="http://127.0.0.1:8086"></label>
-      <label>Influx DB<input id="influx_database" value="machine_db"></label>
+      <button onclick="applyPanel()">Apply To Machine</button>
     </div>
-    <div style="display:flex; gap:10px; margin-top:14px;">
-      <button class="start" onclick="startSim()">Start</button>
-      <button class="stop" onclick="stopSim()">Stop</button>
+    <div class="panel">
+      <h2 style="margin:0">Status Legend</h2>
+      <div class="legend">
+        <div><span class="dot" style="background:#17b26a"></span>Run_Time: output follows runtime / ideal CT</div>
+        <div><span class="dot" style="background:#f7c948"></span>Plan_Stop / Break_Time: no output</div>
+        <div><span class="dot" style="background:#8b9bb0"></span>Stop_Time: no output</div>
+        <div><span class="dot" style="background:#f04438"></span>MC_Alarm: status + alarm, no output</div>
+        <div class="muted">NG is randomized per machine between 0-5% and never exceeds output.</div>
+      </div>
     </div>
-  </section>
-  <section>
-    <h2>Live Metrics</h2>
-    <div class="cards">
-      <div class="card"><div class="muted">Availability</div><div id="a" class="value">0</div></div>
-      <div class="card"><div class="muted">Performance</div><div id="p" class="value">0</div></div>
-      <div class="card"><div class="muted">Quality</div><div id="q" class="value">0</div></div>
-      <div class="card"><div class="muted">OEE</div><div id="oee" class="value">0</div></div>
-    </div>
-    <p id="state" class="muted"></p>
-  </section>
-  <section>
-    <h2>Targets</h2>
-    <table><thead><tr><th>On</th><th>Machine</th><th>Ideal CT</th><th>Target/hr</th><th>Status</th><th>Interval</th><th>A%</th><th>P%</th><th>Q%</th><th>Live</th></tr></thead><tbody id="targets"></tbody></table>
-  </section>
+  </aside>
 </main>
 <script>
+let latest = null;
+let selected = null;
+let machineConfigs = {};
+
+function statusClass(status) { return (status || 'Stop_Time').replace(/[^A-Za-z0-9_]/g, '_'); }
+
 async function getStatus() {
   const res = await fetch('/api/status');
-  const data = await res.json();
-  const scenario = document.getElementById('scenario');
-  if (!scenario.options.length) {
-    Object.keys(data.scenarios).forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      scenario.appendChild(opt);
-    });
-  }
-  const stats = data.stats;
-  document.getElementById('a').textContent = stats.metrics.availability + '%';
-  document.getElementById('p').textContent = stats.metrics.performance + '%';
-  document.getElementById('q').textContent = stats.metrics.quality + '%';
-  document.getElementById('oee').textContent = stats.metrics.oee + '%';
-  document.getElementById('state').textContent =
-    (data.running ? 'Running' : 'Stopped') + ' | batches=' + stats.batches +
-    ' | output=' + stats.output + ' | ng=' + stats.ng +
-    (stats.last_error ? ' | error=' + stats.last_error : '');
-  const editingMachineControls = document.activeElement && document.activeElement.closest && document.activeElement.closest('#targets');
-  if (!editingMachineControls) document.getElementById('targets').innerHTML = data.targets.map(row => {
-    const status = stats.last_status[row.machine] || '-';
-    const cfg = row.config || {};
-    return `<tr data-machine="${row.machine}">
-      <td><input class="check mc-enabled" type="checkbox" ${cfg.enabled ? 'checked' : ''}></td>
-      <td>${row.machine}</td>
-      <td>${row.ideal_ct}s</td>
-      <td>${row.target_per_hour}</td>
-      <td><select class="mc-status">
-        ${['auto','Run_Time','Plan_Stop','Stop_Time','MC_Alarm','Break_Time'].map(v => `<option value="${v}" ${cfg.status === v ? 'selected' : ''}>${v}</option>`).join('')}
-      </select></td>
-      <td><input class="mc-interval" type="number" min="0.2" step="0.1" value="${cfg.interval ?? 1}"></td>
-      <td><input class="mc-a" type="number" min="0" max="100" step="0.1" value="${cfg.availability ?? 95}"></td>
-      <td><input class="mc-p" type="number" min="0" max="150" step="0.1" value="${cfg.performance ?? 96}"></td>
-      <td><input class="mc-q" type="number" min="0" max="100" step="0.1" value="${cfg.quality ?? 98.5}"></td>
-      <td>${status}</td>
-    </tr>`;
+  latest = await res.json();
+  const stats = latest.stats || {};
+  document.getElementById('out').textContent = stats.output || 0;
+  document.getElementById('ng').textContent = stats.ng || 0;
+  document.getElementById('a').textContent = (stats.metrics?.availability || 0) + '%';
+  document.getElementById('p').textContent = (stats.metrics?.performance || 0) + '%';
+  document.getElementById('oee').textContent = (stats.metrics?.oee || 0) + '%';
+  document.getElementById('state').textContent = `${latest.running ? 'RUNNING' : 'STOPPED'} | batches=${stats.batches || 0} | started=${stats.started_at || '-'}`;
+  renderMachines();
+}
+
+function renderMachines() {
+  const box = document.getElementById('machines');
+  box.innerHTML = latest.targets.map(row => {
+    const cfg = machineConfigs[row.machine] || row.config || {};
+    machineConfigs[row.machine] = { ...cfg };
+    const liveStatus = latest.stats.last_status[row.machine] || cfg.status || 'Offline';
+    const state = row.state || {};
+    const metrics = state.metrics || {};
+    const disabled = cfg.enabled === false || cfg.enabled === 'false';
+    return `<div class="machine ${disabled ? 'off' : ''} ${statusClass(liveStatus)} ${selected === row.machine ? 'selected' : ''}" onclick="selectMachine('${row.machine}')">
+      <div class="name">${row.machine}</div>
+      <div class="muted">${row.area} / ${row.type} / ${row.model}</div>
+      <div class="status">${disabled ? 'Disabled' : liveStatus}</div>
+      <div class="numbers">
+        <div><span>OUT</span><br><b>${state.output || 0}</b></div>
+        <div><span>NG</span><br><b>${state.ng || 0}</b></div>
+        <div><span>OK</span><br><b>${state.ok || 0}</b></div>
+        <div><span>Target/hr</span><br><b>${row.target_per_hour}</b></div>
+        <div><span>CT</span><br><b>${row.ideal_ct}s</b></div>
+        <div><span>OEE</span><br><b>${metrics.oee || 0}%</b></div>
+      </div>
+    </div>`;
   }).join('');
 }
+
+function selectMachine(name) {
+  selected = name;
+  const row = latest.targets.find(x => x.machine === name);
+  const cfg = machineConfigs[name] || row.config || {};
+  document.getElementById('panel-title').textContent = name;
+  document.getElementById('mc-enabled').value = String(cfg.enabled !== false);
+  document.getElementById('mc-status').value = cfg.status || 'auto';
+  document.getElementById('mc-interval').value = cfg.interval || 1;
+  document.getElementById('mc-plan').value = cfg.planned_stop_seconds_per_hour || 120;
+  renderMachines();
+}
+
+function applyPanel() {
+  if (!selected) return;
+  machineConfigs[selected] = {
+    ...(machineConfigs[selected] || {}),
+    enabled: document.getElementById('mc-enabled').value === 'true',
+    status: document.getElementById('mc-status').value,
+    interval: Number(document.getElementById('mc-interval').value || 1),
+    planned_stop_seconds_per_hour: Number(document.getElementById('mc-plan').value || 0),
+  };
+  renderMachines();
+}
+
 function readConfig() {
-  const ids = ['scenario','machine_count','interval','planned_stop_seconds_per_hour','availability','performance','quality','mqtt_url','influx_url','influx_database'];
-  const data = {};
-  ids.forEach(id => data[id] = document.getElementById(id).value);
-  data.machine_configs = {};
-  document.querySelectorAll('tr[data-machine]').forEach(row => {
-    const name = row.getAttribute('data-machine');
-    data.machine_configs[name] = {
-      enabled: row.querySelector('.mc-enabled').checked,
-      status: row.querySelector('.mc-status').value,
-      interval: Number(row.querySelector('.mc-interval').value || 1),
-      availability: Number(row.querySelector('.mc-a').value || 95),
-      performance: Number(row.querySelector('.mc-p').value || 96),
-      quality: Number(row.querySelector('.mc-q').value || 98.5),
-      planned_stop_seconds_per_hour: Number(document.getElementById('planned_stop_seconds_per_hour').value || 0),
-    };
-  });
-  return data;
+  return {
+    scenario: 'stable',
+    machine_count: Number(document.getElementById('machine_count').value || 10),
+    interval: 0.25,
+    planned_stop_seconds_per_hour: 120,
+    mqtt_url: document.getElementById('mqtt_url').value,
+    influx_url: document.getElementById('influx_url').value,
+    influx_database: document.getElementById('influx_database').value,
+    machine_configs: machineConfigs,
+  };
 }
+
 async function startSim() {
+  if (selected) applyPanel();
   await fetch('/api/start', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(readConfig()) });
-  getStatus();
+  await getStatus();
 }
+
 async function stopSim() {
   await fetch('/api/stop', { method: 'POST' });
-  getStatus();
+  await getStatus();
 }
-document.getElementById('scenario').addEventListener('change', async () => {
-  const res = await fetch('/api/status');
-  const data = await res.json();
-  const profile = data.scenarios[document.getElementById('scenario').value];
-  if (!profile) return;
-  document.getElementById('availability').value = profile.availability;
-  document.getElementById('performance').value = profile.performance;
-  document.getElementById('quality').value = profile.quality;
-  document.getElementById('planned_stop_seconds_per_hour').value = profile.planned_stop_seconds_per_hour;
-});
+
 setInterval(getStatus, 1000);
 getStatus();
 </script>
@@ -401,9 +477,6 @@ class Handler(BaseHTTPRequestHandler):
                 "machine_count": int(float(data.get("machine_count", DEFAULT_CONFIG["machine_count"]))),
                 "interval": float(data.get("interval", DEFAULT_CONFIG["interval"])),
                 "scenario": data.get("scenario", DEFAULT_CONFIG["scenario"]),
-                "availability": float(data.get("availability", DEFAULT_CONFIG["availability"])),
-                "performance": float(data.get("performance", DEFAULT_CONFIG["performance"])),
-                "quality": float(data.get("quality", DEFAULT_CONFIG["quality"])),
                 "planned_stop_seconds_per_hour": int(float(data.get("planned_stop_seconds_per_hour", DEFAULT_CONFIG["planned_stop_seconds_per_hour"]))),
                 "machine_configs": data.get("machine_configs", {}),
             }

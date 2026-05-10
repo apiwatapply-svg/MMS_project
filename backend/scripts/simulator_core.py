@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import math
+import random
 from typing import Any
 
 
@@ -28,6 +29,7 @@ class SimulationProfile:
     quality: float
     planned_stop_seconds_per_hour: int = 0
     force_status: str | None = None
+    ng_rate_pct: float | None = None
 
 
 @dataclass
@@ -37,6 +39,11 @@ class MachineRuntimeState:
     elapsed_in_hour: float = 0.0
     last_status: str | None = None
     seq: int = 0
+    total_seconds: float = 0.0
+    run_seconds: float = 0.0
+    excluded_seconds: float = 0.0
+    output_count: int = 0
+    ng_count: int = 0
 
 
 SCENARIOS = {
@@ -93,6 +100,7 @@ def get_profile(name: str, **overrides: Any) -> SimulationProfile:
         "quality": float(overrides.get("quality", base.quality)),
         "planned_stop_seconds_per_hour": int(overrides.get("planned_stop_seconds_per_hour", base.planned_stop_seconds_per_hour)),
         "force_status": force_status,
+        "ng_rate_pct": overrides.get("ng_rate_pct", base.ng_rate_pct),
     }
     return SimulationProfile(**values)
 
@@ -212,7 +220,12 @@ def generate_machine_events(
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     state.elapsed_in_hour = (state.elapsed_in_hour + elapsed_seconds) % 3600
+    state.total_seconds += elapsed_seconds
     status = current_status(profile, state.elapsed_in_hour)
+    if status == "Run_Time":
+        state.run_seconds += elapsed_seconds
+    elif status in ("Plan_Stop", "Break_Time") or "Preventive" in status:
+        state.excluded_seconds += elapsed_seconds
 
     if status != state.last_status:
         events.append(build_status_payload(machine, status))
@@ -229,14 +242,16 @@ def generate_machine_events(
     piece_count = int(state.piece_carry)
     state.piece_carry -= piece_count
 
-    ng_rate = max(0.0, min(1.0, 1.0 - (profile.quality / 100.0)))
+    ng_rate = max(0.0, min(0.05, (profile.ng_rate_pct / 100.0) if profile.ng_rate_pct is not None else (1.0 - (profile.quality / 100.0))))
     for index in range(piece_count):
         state.seq += 1
-        state.ng_carry += ng_rate
-        is_ng = False
-        if state.ng_carry >= 1:
-            is_ng = True
+        state.output_count += 1
+        state.ng_carry += ng_rate * random.uniform(0.6, 1.4)
+        max_ng_count = math.floor(state.output_count * ng_rate)
+        is_ng = state.ng_carry >= 1 and state.ng_count < max_ng_count
+        if is_ng:
             state.ng_carry -= 1
+            state.ng_count += 1
         events.append(build_data_payload(machine, state, profile, seq_base + state.seq + index, is_ng))
 
     return events
