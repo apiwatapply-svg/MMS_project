@@ -35,16 +35,45 @@ It is now a required CI gate. The project still contains historical frontend deb
 
 ## Local CI Commands
 
-Run these before pushing:
+Run these before pushing. This is the same check order as GitHub Actions.
 
 ```bash
-cd backend
+cd C:/Users/FDB-MM-024/Documents/My_Project/Apply_Job/Portfolio/MMS_project/backend
+npm ci
 npm run lint
 npm test
 npm run test:sim
 npm run smoke
 
 cd ../fontend
+npm ci
 npm run lint
 npm run build
 ```
+
+## What To Run Manually
+
+If you want to do CI by yourself, run these commands in order:
+
+1. `cd C:/Users/FDB-MM-024/Documents/My_Project/Apply_Job/Portfolio/MMS_project/backend`
+2. `npm ci`
+3. `npm run lint`
+4. `npm test`
+5. `npm run test:sim`
+6. `npm run smoke`
+7. `cd ../fontend`
+8. `npm ci`
+9. `npm run lint`
+10. `npm run build`
+
+The project is ready to push when all commands finish without errors.
+
+## Command Meaning
+
+- `npm ci`: Install dependencies exactly from `package-lock.json`.
+- `npm run lint` in backend: Check backend JavaScript syntax.
+- `npm test`: Run backend unit tests.
+- `npm run test:sim`: Run Python simulator unit tests through the cross-platform Node wrapper.
+- `npm run smoke`: Start backend with machine I/O disabled and verify `/api/health`.
+- `npm run lint` in frontend: Run ESLint for frontend source files.
+- `npm run build`: Build the Next.js frontend for production.
