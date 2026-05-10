@@ -32,17 +32,26 @@ Recommended commit style:
 flowchart LR
   Push["git push"] --> CI["GitHub Actions"]
   CI --> InstallBE["npm ci: backend"]
-  InstallBE --> Test["npm test"]
-  Test --> InstallFE["npm ci: fontend"]
-  InstallFE --> Build["npm run build"]
+  InstallBE --> Prisma["npm run prisma:generate"]
+  Prisma --> LintBE["npm run lint"]
+  LintBE --> Test["backend unit tests"]
+  Test --> Sim["simulator tests"]
+  Sim --> Smoke["backend smoke test"]
+  Smoke --> InstallFE["npm ci: fontend"]
+  InstallFE --> LintFE["frontend lint"]
+  LintFE --> Build["frontend production build"]
   Build --> Result["Pass / fail result"]
 ```
 
 The current CI workflow runs:
 
 - Backend dependency install.
-- Backend unit tests.
+- Prisma Client generation.
+- Backend syntax check.
+- Backend unit tests for OEE, output, report, simulator, MQTT, auto NG, and display rules.
+- Backend smoke test for `/api/health`.
 - Frontend dependency install.
+- Frontend lint.
 - Frontend production build.
 
 ## 3. CD and PM2 Deployment
@@ -69,6 +78,21 @@ npm ci
 npm run build
 cd ..
 pm2 start ecosystem.config.js
+pm2 save
+```
+
+For a repeat deployment after the PM2 process already exists:
+
+```bash
+git pull
+cd backend
+npm ci --omit=dev
+npx prisma generate
+cd ../fontend
+npm ci
+npm run build
+cd ..
+pm2 restart mms-dashboard-api --update-env
 pm2 save
 ```
 

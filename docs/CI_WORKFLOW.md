@@ -4,6 +4,38 @@ This project uses GitHub Actions to check the application before merge or deploy
 
 GitHub Actions uses a dummy `DATABASE_URL` only to generate Prisma Client and load backend modules during tests. It does not connect to the real customer SQL Server in CI.
 
+## Automatic Trigger
+
+CI runs automatically when code is pushed to `main` or when a pull request targets `main`.
+
+```mermaid
+flowchart LR
+  Dev["Developer changes code"] --> Commit["git commit"]
+  Commit --> Push["git push origin main"]
+  Push --> Actions["GitHub Actions starts automatically"]
+  Actions --> Result["Green = deployable / Red = fix required"]
+```
+
+For this repository, the Actions page is:
+
+```text
+https://github.com/apiwatapply-svg/MMS_project/actions
+```
+
+The badge in `README.md` shows the latest CI status. Green means the latest `main` commit passed the required checks.
+
+## Recommended Branch Protection
+
+For a stricter team workflow, enable branch protection on GitHub:
+
+1. Open `Settings > Branches`.
+2. Add a rule for `main`.
+3. Enable `Require status checks to pass before merging`.
+4. Select `MMS Dashboard CI / test-and-build`.
+5. Enable `Require branches to be up to date before merging`.
+
+After this, code cannot be merged into `main` unless CI passes.
+
 ## CI Steps
 
 1. Checkout source code.
@@ -26,6 +58,18 @@ GitHub Actions uses a dummy `DATABASE_URL` only to generate Prisma Client and lo
 - Smoke test starts the API with machine I/O disabled and verifies `/api/health`.
 - Frontend lint catches Next.js and React code quality issues inside `src`.
 - Frontend build catches TypeScript and Next.js production build problems.
+
+## Interview Explanation
+
+Use this short story:
+
+1. I push code to `main`.
+2. GitHub Actions installs backend dependencies exactly from `package-lock.json`.
+3. Prisma Client is generated from the schema so the backend can load database models.
+4. Backend syntax and unit tests validate OEE, target, NG, report, simulator, and display rules.
+5. A smoke test starts the real API with MQTT/Influx/cron disabled and checks `/api/health`.
+6. Frontend dependencies are installed, lint runs, and Next.js production build must succeed.
+7. If any step fails, deployment stops. If all steps pass, the commit is ready for PM2 deployment.
 
 ## Frontend Lint Policy
 

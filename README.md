@@ -1,5 +1,7 @@
 # Smart Factory MMS Dashboard
 
+[![MMS Dashboard CI](https://github.com/apiwatapply-svg/MMS_project/actions/workflows/ci.yml/badge.svg)](https://github.com/apiwatapply-svg/MMS_project/actions/workflows/ci.yml)
+
 Smart Factory MMS Dashboard is a machine monitoring and OEE reporting platform for factory production lines. The system collects machine data from shop-floor networks, stores normalized production data in SQL Server, and presents real-time dashboards, daily reports, monthly reports, machine reports, NG reports, and operator working history.
 
 ## Project Highlights
@@ -10,6 +12,27 @@ Smart Factory MMS Dashboard is a machine monitoring and OEE reporting platform f
 - Supports daily and monthly report dashboards for production decision-making.
 - Includes PM2 deployment workflow for customer on-premise servers.
 - Includes CI workflow for backend unit tests and frontend build verification.
+
+## CI/CD Summary
+
+Every push to `main` automatically runs GitHub Actions. The pipeline proves that the code can install dependencies, generate Prisma Client, pass backend tests, pass simulator tests, start the backend health endpoint, lint the frontend, and build the Next.js production output.
+
+```mermaid
+flowchart LR
+  Code["Code change"] --> Push["git push to main"]
+  Push --> CI["GitHub Actions CI"]
+  CI --> Backend["Backend lint + unit tests + smoke test"]
+  CI --> Frontend["Frontend lint + production build"]
+  Backend --> Gate["Pass / fail gate"]
+  Frontend --> Gate
+  Gate --> Deploy["Deploy to customer server with PM2"]
+```
+
+Use this when explaining the project in an interview:
+
+- `CI`: checks code quality and prevents broken OEE/report/dashboard logic from being pushed unnoticed.
+- `Smoke test`: starts the real Express server with machine I/O disabled and verifies `/api/health`.
+- `CD approach`: after CI passes, build the frontend, install backend dependencies, generate Prisma Client, then restart the PM2 process on the customer server.
 
 ## Architecture Flow
 
@@ -172,6 +195,19 @@ npm run test:sim
 
 Current unit tests cover OEE calculation rules, hourly aggregation, actual output selection, monthly report bucket logic, and simulator target/OEE formulas.
 
+To run the same local CI flow with one command:
+
+```bash
+bash scripts/run_ci.sh --skip-install
+```
+
+The script creates local reports in `reports/`:
+
+```text
+reports/ci-report-YYYYMMDD-HHMMSS.md
+reports/ci-log-YYYYMMDD-HHMMSS.txt
+```
+
 ## Production Deployment with PM2
 
 ```bash
@@ -189,3 +225,5 @@ The backend serves the exported Next.js frontend from `fontend/out` in productio
 - [System Architecture](docs/System-Architecture.md)
 - [User Manual](docs/User-Manual.md)
 - [Git and DevOps Workflow](docs/Git-DevOps-Workflow.md)
+- [CI Workflow](docs/CI_WORKFLOW.md)
+- [PM2 Deployment Guide](docs/PM2_DEPLOYMENT.md)
