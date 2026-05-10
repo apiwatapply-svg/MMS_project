@@ -14,6 +14,8 @@ import argparse
 import json
 import os
 import random
+import shutil
+import subprocess
 import sys
 import time
 import urllib.parse
@@ -170,7 +172,7 @@ def to_influx_line(payload: dict[str, Any]) -> str:
     measurement = payload["name"]
     tags = ",".join(f"{escape_tag(k)}={escape_tag(v)}" for k, v in payload["tags"].items())
     fields = ",".join(f"{escape_tag(k)}={field_value(v)}" for k, v in payload["fields"].items())
-    timestamp_ns = int(payload["timestamp"]) * 1_000_000_000
+    timestamp_ns = int(payload["fields"].get("id") or (int(payload["timestamp"]) * 1_000_000_000))
     return f"{measurement},{tags} {fields} {timestamp_ns}"
 
 
@@ -188,7 +190,7 @@ def write_influx(influx_url: str, database: str, payload: dict[str, Any]) -> boo
 
 def connect_mqtt(mqtt_url: str):
     if mqtt is None:
-        raise RuntimeError("Missing dependency: install paho-mqtt with `py -m pip install paho-mqtt`.")
+        return None
 
     parsed = parse_mqtt_url(mqtt_url)
     client = mqtt.Client(client_id=f"mms-simulator-{random.randint(1000, 9999)}")
@@ -197,6 +199,37 @@ def connect_mqtt(mqtt_url: str):
     client.connect(parsed["host"], parsed["port"], keepalive=30)
     client.loop_start()
     return client
+
+
+def publish_mqtt(client: Any, mqtt_url: str, topic: str, payload: dict[str, Any]) -> None:
+    payload_text = json.dumps(payload)
+    if client is not None:
+        client.publish(topic, payload_text, qos=1)
+        return
+
+    mosquitto_pub = shutil.which("mosquitto_pub") or r"C:\Program Files\Mosquitto\mosquitto_pub.exe"
+    if not os.path.exists(mosquitto_pub):
+        raise RuntimeError(
+            "Missing MQTT publisher. Install paho-mqtt or make mosquitto_pub.exe available in PATH."
+        )
+
+    parsed = parse_mqtt_url(mqtt_url)
+    cmd = [
+        mosquitto_pub,
+        "-h",
+        parsed["host"],
+        "-p",
+        str(parsed["port"]),
+        "-t",
+        topic,
+        "-m",
+        payload_text,
+        "-q",
+        "1",
+    ]
+    if parsed["username"]:
+        cmd.extend(["-u", parsed["username"], "-P", parsed["password"] or ""])
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
 
 
 def main() -> int:
@@ -216,7 +249,8 @@ def main() -> int:
     machines = DEFAULT_MACHINES[:machine_count]
 
     client = connect_mqtt(args.mqtt_url)
-    print(f"[MQTT] connected to {args.mqtt_url}")
+    publisher = "paho-mqtt" if client is not None else "mosquitto_pub.exe"
+    print(f"[MQTT] publishing to {args.mqtt_url} via {publisher}")
     if not args.no_influx:
         print(f"[InfluxDB] writing to {args.influx_url}/{args.influx_database}")
     print(f"[Simulator] machines: {', '.join(m['name'] for m in machines)}")
@@ -234,7 +268,7 @@ def main() -> int:
 
                 for payload in payloads:
                     topic = f"factory/{machine['type']}/{machine['name']}/{payload['name']}"
-                    client.publish(topic, json.dumps(payload), qos=1)
+                    publish_mqtt(client, args.mqtt_url, topic, payload)
                     if not args.no_influx:
                         write_influx(args.influx_url, args.influx_database, payload)
 
@@ -243,8 +277,9 @@ def main() -> int:
     except KeyboardInterrupt:
         print("\n[Simulator] stopped")
     finally:
-        client.loop_stop()
-        client.disconnect()
+        if client is not None:
+            client.loop_stop()
+            client.disconnect()
 
     return 0
 

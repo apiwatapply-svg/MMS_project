@@ -3,6 +3,9 @@
 !.env.example
 
 node_modules/
+.tools/
+.influxdb-demo/
+__pycache__/
 .next/
 out/
 /dist/

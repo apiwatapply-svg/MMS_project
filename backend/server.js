@@ -40,6 +40,7 @@ const fileUpload = require("express-fileupload");
 const bodyParser = require("body-parser");
 const port = process.env.PORT || 5005;
 const enableMachineIo = process.env.ENABLE_MACHINE_IO === "true";
+const enableCronWorker = process.env.ENABLE_CRON_WORKER === "true";
 
 // 1️⃣ ต้อง parse JSON ก่อน (สำคัญสุด)
 app.use(express.json());
@@ -345,7 +346,11 @@ server.listen(port, () => {
     console.log("🔧 Cron worker thread spawned (heavy DB write isolated)");
   };
 
-  spawnCronWorker();
+  if (enableCronWorker) {
+    spawnCronWorker();
+  } else {
+    console.log("Cron worker disabled: skipping InfluxDB-to-SQL backfill jobs.");
+  }
 });
 
 // ─────────────────────────────────────────────────────────

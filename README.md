@@ -96,6 +96,7 @@ For an interview or local demo, MMS can run with live machine-style data instead
 
 ```env
 ENABLE_MACHINE_IO=true
+ENABLE_CRON_WORKER=false
 MQTT_URL="mqtt://127.0.0.1:1883"
 INFLUX_HOST="127.0.0.1"
 INFLUX_PORT="8086"
@@ -103,7 +104,7 @@ INFLUX_DATABASE="machine_db"
 INFLUX_URL="http://127.0.0.1:8086"
 ```
 
-2. Install Python 3.11+ if it is not available, then install the simulator dependency.
+2. Install Python 3.11+ if it is not available. Installing `paho-mqtt` is optional because the simulator can fallback to the installed Mosquitto `mosquitto_pub.exe`.
 
 ```bash
 cd backend
@@ -115,6 +116,8 @@ py -m pip install -r scripts/requirements-simulator.txt
 ```bash
 node server.js
 ```
+
+Keep `ENABLE_CRON_WORKER=false` for a live demo when you only need MQTT, InfluxDB, Socket.IO, and current-hour machine memory. Set it to `true` only when SQL Server credentials are ready and you want InfluxDB-to-SQL backfill jobs.
 
 4. In another terminal, publish simulated machine data from 5-10 machine types.
 

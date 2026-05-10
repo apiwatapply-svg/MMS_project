@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node tests/oeeCalcService.unit.js && node tests/reportDashboardService.unit.js",
-    "sim:mqtt": "py scripts/simulate_machine_mqtt.py"
+    "sim:mqtt": "scripts\\run_simulator.cmd"
   },
   "author": "",
   "license": "ISC",
