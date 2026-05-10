@@ -1,8 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const dayjs = require("dayjs");
-const fs = require("fs");
-const path = require("path");
 
 const { getNgMode, sumHourlyFields, calcRejectSummary } = require("../services/oeeCalcService");
 
@@ -127,7 +125,7 @@ module.exports = {
                     if (dailyData[key] && a.Overall !== undefined && a.Overall !== null) {
                         // Machine_Output = raw output from machine
                         dailyData[key].Machine_Output = a.Overall;
-                        // Default: Total_Output = Machine_Output (may be overridden below for over_reject)
+                        // Total_Output = Machine_Output for the standard visual NG calculation.
                         dailyData[key].Total_Output = a.Overall;
                         if (a.Overall > 0) dailyData[key].has_production = true;
                     }
@@ -157,51 +155,30 @@ module.exports = {
                     }
                 });
 
-                // --- NG Calculation based on ng_mode ---
-                const ngMode = getNgMode(machine.machine_name);
+                // --- Visual NG calculation for every machine type ---
+                oees.filter(o => o.machine_name === mName).forEach(o => {
+                    const key = getDateKey(o.date);
+                    if (dailyData[key]) {
+                        const visualNg = o.ng_qty;
+                        dailyData[key].has_production = true;
 
-                if (ngMode === "over_reject") {
-                    // ABR: NG = All station NG (Over Reject). Visual NG is not applicable.
-                    // Total_Output = Machine_Output - Over_Reject
-                    // Trigger: when station NG data exists (has_production set by station loop)
-                    for (const key of Object.keys(dailyData)) {
-                        const d = dailyData[key];
-                        if (!d.has_production) continue;
-                        const machineOut = d.Machine_Output !== "-" ? Number(d.Machine_Output) : 0;
-                        const { rejectQty: overReject, totalOutput: totalOut, rejectPercent } = calcRejectSummary(machineOut, d.All || 0);
-                        d.Over_Reject = overReject;
-                        d.Total_Output = totalOut;
-                        d.Over_Reject_Percent = rejectPercent;
-                        // Visual_NG is not applicable for ABR — leave as null
-                        d.Visual_NG = null;
-                    }
-                } else {
-                    // AHV / default: Visual NG mode — existing logic
-                    oees.filter(o => o.machine_name === mName).forEach(o => {
-                        const key = getDateKey(o.date);
-                        if (dailyData[key]) {
-                            const visualNg = o.ng_qty;
-                            dailyData[key].has_production = true;
+                        if (visualNg !== null && visualNg !== undefined) {
+                            const userHasNotUpdated = oeeMode === 'manual' && visualNg === 0 && o.quality === 0 && o.oee_value === 0;
 
-                            if (visualNg !== null && visualNg !== undefined) {
-                                const userHasNotUpdated = oeeMode === 'manual' && visualNg === 0 && o.quality === 0 && o.oee_value === 0;
+                            if (userHasNotUpdated) {
+                                dailyData[key].Visual_NG = "-";
+                            } else {
+                                dailyData[key].Visual_NG = visualNg;
+                                const overReject = Math.max(0, dailyData[key].All - visualNg);
+                                dailyData[key].Over_Reject = overReject;
 
-                                if (userHasNotUpdated) {
-                                    dailyData[key].Visual_NG = "-";
-                                } else {
-                                    dailyData[key].Visual_NG = visualNg;
-                                    const overReject = Math.max(0, dailyData[key].All - visualNg);
-                                    dailyData[key].Over_Reject = overReject;
-
-                                    const totalOutput = dailyData[key].Total_Output !== "-" ? dailyData[key].Total_Output : 0;
-                                    dailyData[key].Over_Reject_Percent = calcRejectSummary(totalOutput, overReject).rejectPercent;
-                                    // Machine_Output = Total_Output for visual_ng mode
-                                    dailyData[key].Machine_Output = dailyData[key].Total_Output;
-                                }
+                                const totalOutput = dailyData[key].Total_Output !== "-" ? dailyData[key].Total_Output : 0;
+                                dailyData[key].Over_Reject_Percent = calcRejectSummary(totalOutput, overReject).rejectPercent;
+                                dailyData[key].Machine_Output = dailyData[key].Total_Output;
                             }
                         }
-                    });
-                }
+                    }
+                });
 
                 return {
                     machine_name: mName,

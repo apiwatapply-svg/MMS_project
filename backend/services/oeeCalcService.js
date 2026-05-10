@@ -88,7 +88,7 @@ function getCTCalcMode(machineName) {
 }
 
 /**
- * Get Quality calculation mode (visual_ng or over_reject)
+ * Get Quality calculation mode. MMS now uses visual_ng for every machine.
  */
 function getNgMode(machineName) {
     if (!machineCalcConfig) {
@@ -253,12 +253,10 @@ function calcManualNgMetrics(totalOutput, ngQty, availability, performance) {
     };
 }
 
-function calcAutoOeeMetrics({ totalOutput, ngQty, availability, idealCT, runTimeSeconds, ngMode, fallbackOeeValue = 0 }) {
-    const outputForOee = ngMode === "over_reject"
-        ? Math.max(0, (Number(totalOutput) || 0) - (Number(ngQty) || 0))
-        : (Number(totalOutput) || 0);
+function calcAutoOeeMetrics({ totalOutput, ngQty, availability, idealCT, runTimeSeconds, fallbackOeeValue = 0 }) {
+    const outputForOee = Number(totalOutput) || 0;
     const performance = calcPerformance(outputForOee, idealCT, runTimeSeconds);
-    const quality = ngMode === "over_reject" ? 100 : calcVisualQuality(totalOutput, ngQty);
+    const quality = calcVisualQuality(totalOutput, ngQty);
     const oeeValue = calcOeeValue(availability, performance, quality, fallbackOeeValue);
 
     return {
@@ -339,25 +337,6 @@ async function recalculateAPQForDay(machineName, targetDate) {
                 excludedSeconds += eTime;
                 totalActiveSeconds += 3600;
             }
-        }
-
-        // 🆕 output_based override: AHV ไม่มี MCStatus → ใช้ Output × AvgCT แทน
-        if (getMachineRunTimeMode(machineName) === "output_based") {
-            let sumCtWeighted = 0;
-            let totalOutputForCt = 0;
-            for (let i = 0; i < SHIFT_HOURS.length; i++) {
-                const h = SHIFT_HOURS[i];
-                const out = outputSumPerHour[`actual_${h}`] || 0;
-                const ct  = ctRow ? (ctRow[`cycle_${h}`] || 0) : 0;
-                if (out > 0 && ct > 0) {
-                    sumCtWeighted += ct * out;
-                    totalOutputForCt += out;
-                }
-            }
-            const avgCtAcross = totalOutputForCt > 0 ? (sumCtWeighted / totalOutputForCt) : 0;
-            const avgToUse = avgCtAcross > 0 ? avgCtAcross : (targetRow?.cycle_time_target || 0);
-            runTimeSeconds = totalOutput * avgToUse;
-            excludedSeconds = 0;
         }
 
         const availability = calcAvailability(runTimeSeconds, excludedSeconds, totalActiveSeconds);

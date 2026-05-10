@@ -1,15 +1,11 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const dayjs = require("dayjs");
-const fs = require("fs");
-const path = require("path");
 
 const {
     getNgMode,
     getAvailabilityTargetConfig,
     sumHourlyFields,
-    calcRejectSummary,
-    calcOeeValue,
 } = require("../services/oeeCalcService");
 const { groupActualRowsByMachineAndDate, sumActualTotal } = require("../services/actualOutputService");
 
@@ -146,18 +142,6 @@ module.exports = {
                     dailyData[key].output_actual = totalActual;
                 });
 
-                // --- Station NG Data (for over_reject) ---
-                const dailyNgTotals = {};
-                if (ngMode === "over_reject") {
-                    ngs.filter(ng => ng.machine_name === mName && ng.station_id === 0).forEach(ng => {
-                        const key = getDateKey(ng.date);
-                        const totalNg = sumHourlyFields(ng, "ng", SHIFT_HOURS);
-                        
-                        if (!dailyNgTotals[key]) dailyNgTotals[key] = 0;
-                        dailyNgTotals[key] += totalNg;
-                    });
-                }
-
                 // --- Availability: tb_availability_actual (primary) + tb_efficiency_actual (legacy fallback) ---
                 // 🔧 Fix Bug #2: ใช้ avail_actual จาก tb_availability_actual เป็น source หลัก
                 // เพราะ Cron Worker เขียนทุกชั่วโมง และตรงกับที่ machine_working ใช้
@@ -193,9 +177,7 @@ module.exports = {
                 oees.filter(o => o.machine_name === mName).forEach(o => {
                     const key = getDateKey(o.date);
                     if (!dailyData[key]) dailyData[key] = {};
-                    if (ngMode !== "over_reject") {
-                        dailyData[key].ng_qty = o.ng_qty || 0;
-                    }
+                    dailyData[key].ng_qty = o.ng_qty || 0;
                     // Fallback availability ถ้า tb_availability_actual ยังไม่มีข้อมูลวันนี้
                     if (!dailyData[key].availability) {
                         dailyData[key].availability = o.availability || 0;
@@ -205,34 +187,9 @@ module.exports = {
                     dailyData[key].oee = o.oee_value || 0;
                 });
 
-                // --- Calculate Over_Reject & Override Totals ---
+                // --- Normalize totals for standard visual NG mode ---
                 Object.keys(dailyData).forEach(key => {
-                    if (ngMode === "over_reject") {
-                        const { rejectQty: overReject, totalOutput } = calcRejectSummary(
-                            dailyData[key].machine_output_actual || 0,
-                            dailyNgTotals[key] || 0
-                        );
-                        dailyData[key].over_reject_qty = overReject;
-                        dailyData[key].ng_qty = 0; // Force NG Qty to 0
-                        const machineOut = dailyData[key].machine_output_actual || 0;
-                        dailyData[key].output_actual = totalOutput;
-                        
-                        // Force Quality to 100 if there's output
-                        if (machineOut > 0) {
-                            dailyData[key].quality = 100;
-                            dailyData[key].oee = calcOeeValue(
-                                dailyData[key].availability || 0,
-                                dailyData[key].performance || 0,
-                                100
-                            );
-                        } else {
-                            dailyData[key].quality = 0;
-                            dailyData[key].oee = 0;
-                        }
-                    } else {
-                        // Ensure machine_output_actual is populated for standard mode
-                        dailyData[key].machine_output_actual = dailyData[key].output_actual;
-                    }
+                    dailyData[key].machine_output_actual = dailyData[key].output_actual;
                 });
 
                 return {

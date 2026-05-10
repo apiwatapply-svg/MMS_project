@@ -10,7 +10,6 @@ const influxService = require("./influxService");
 const cacheService = require("./cacheService");
 const { getMachineStateMem } = require("./mqttService"); // 🆕 Use MQTT Memory
 const {
-    getMachineRunTimeMode,
     calcMcStatusDurations,
     calcAvailability,
     calcPerformance,
@@ -61,19 +60,8 @@ function startRealtimePolling(_emitFn, _broadcastFn) {
     async function refreshModeCache() {
         try {
             const configs = await prisma.tb_machine_plan_config.findMany({ select: { machine_name: true, oee_mode: true } });
-            const machines = await prisma.tbm_machine.findMany({ select: { machine_name: true, machine_type: true } });
-            
-            const fs = require("fs");
-            const path = require("path");
-            const machineCalcConfig = JSON.parse(fs.readFileSync(path.join(__dirname, "../config/machine_calc.json"), "utf-8"));
-            const ngModes = machineCalcConfig.ng_modes || {};
-
-            const typeMap = new Map(machines.map(m => [m.machine_name, m.machine_type]));
-            
             machineModeCache = new Map(configs.map(c => {
-                const mType = typeMap.get(c.machine_name) || "Unknown";
-                const ngMode = ngModes[mType] || ngModes["default"] || "visual_ng";
-                return [c.machine_name, { oee_mode: c.oee_mode || "manual", ng_mode: ngMode }];
+                return [c.machine_name, { oee_mode: c.oee_mode || "manual", ng_mode: "visual_ng" }];
             }));
         } catch(e) {}
         modeCacheTimer = setTimeout(refreshModeCache, 120000);
@@ -359,35 +347,20 @@ async function fastPollAndEmit() {
 
             // 🛠️ Calculate Current Hour Availability dynamically for Fast Loop
             const totalHourSecs = Math.max(0, (now.getTime() - new Date(start).getTime()) / 1000);
-            const modeRunTime = getMachineRunTimeMode(machineName);
             let currentHourRun = 0;
-            if (modeRunTime === "output_based") {
-                currentHourRun = currentData.output_count * parseFloat(effectiveCt.toFixed(2));
-            } else {
-                const mcRecords = sharedMcRecordsCache[machineName] || [];
-                if (mcRecords.length > 0) {
-                    const TH_OFFSET = 7 * 3600000;
-                    const startTH = new Date(new Date(start).getTime() + TH_OFFSET);
-                    const nowTH = new Date(now.getTime() + TH_OFFSET);
-                    const { runTimeSeconds } = calcMcStatusDurations(mcRecords, startTH, nowTH);
-                    currentHourRun = runTimeSeconds;
-                }
+            if (mcRecords.length > 0) {
+                const TH_OFFSET = 7 * 3600000;
+                const startTH = new Date(new Date(start).getTime() + TH_OFFSET);
+                const nowTH = new Date(now.getTime() + TH_OFFSET);
+                const { runTimeSeconds } = calcMcStatusDurations(mcRecords, startTH, nowTH);
+                currentHourRun = runTimeSeconds;
             }
             const currentAvail = calcAvailability(currentHourRun, currentHourExcluded, totalHourSecs);
             if (currentShiftIndex < hourlyAvailability.length) {
                 hourlyAvailability[currentShiftIndex] = parseFloat(currentAvail.toFixed(2));
             }
 
-            // 🆕 Daily Availability สำหรับ output_based machines (real-time ทุก 2 วิ)
-            // output_based ใช้ totalOutput × avgCT หารด้วย totalValidSeconds
             let dailyAvailability = undefined; // number | undefined
-            if (modeRunTime === "output_based") {
-                const avgCtForAvail = overallAvgCt > 0 ? overallAvgCt : (targets.cycle_time_target || 0);
-                if (avgCtForAvail > 0 && totalValidSeconds > 0) {
-                    const dailyRunTimeSecs = totalOutput * avgCtForAvail;
-                    dailyAvailability = parseFloat(Math.min(100, (dailyRunTimeSecs / totalValidSeconds) * 100).toFixed(2));
-                }
-            }
 
             // Build full production payload
             const machinePayload = {
@@ -408,7 +381,6 @@ async function fastPollAndEmit() {
                     achieve: parseFloat(overallAchieve.toFixed(2)),
                     avgCycleTime: parseFloat(overallAvgCt.toFixed(2)),
                     overallEfficiency: parseFloat(overallEff.toFixed(2)),
-                    // 🆕 availability สำหรับ output_based (ส่งทุก 2 วิ); ส่วน status_based รอ Slow Loop
                     ...(dailyAvailability !== undefined && { availability: dailyAvailability }),
                     hourly: {
                         output: hourlyOutput,
@@ -491,13 +463,6 @@ async function fastPollAndEmit() {
                 const targetEntry = cacheService.getTarget(machineName);
                 const idealCT = targetEntry?.target?.cycle_time_target || 0;
 
-                const modeRunTime = getMachineRunTimeMode(machineName);
-                if (modeRunTime === "output_based") {
-                    // AHV: ไม่ใช้ Stopwatch → ใช้ Output × AvgCT แทน
-                    const avgToUse = overallAvgCt > 0 ? overallAvgCt : idealCT;
-                    runTimeSeconds = totalOutput * avgToUse;
-                }
-
                 // 🆕 [Step 3d] NG total = RAM (past Cron-confirmed) + pending (bridge) + InfluxDB (current hour)
                 const pastNg = cacheService.getNgPastHours(machineName);
                 const pendingNg = autoNgCache.pendingPrevHour[machineName] || 0;
@@ -511,7 +476,6 @@ async function fastPollAndEmit() {
                     availability,
                     idealCT,
                     runTimeSeconds,
-                    ngMode: mCacheConfig.ng_mode,
                 });
 
                 const autoOeePayload = {
@@ -519,8 +483,7 @@ async function fastPollAndEmit() {
                     performance,
                     quality,
                     oee: oeeValue,
-                    over_reject_qty: mCacheConfig.ng_mode === "over_reject" ? ngQty : undefined,
-                    ngQty: mCacheConfig.ng_mode === "over_reject" ? 0 : ngQty,
+                    ngQty,
                     oeeMode: "auto"
                 };
 
@@ -531,7 +494,6 @@ async function fastPollAndEmit() {
                     lastAutoData.performance !== autoOeePayload.performance ||
                     lastAutoData.quality !== autoOeePayload.quality ||
                     lastAutoData.ngQty !== autoOeePayload.ngQty ||
-                    lastAutoData.over_reject_qty !== autoOeePayload.over_reject_qty ||
                     lastAutoData.status !== currentStatus) {
 
                     dashboardMachinesUpdate[machineName] = {
@@ -687,7 +649,7 @@ async function _slowPollAndEmitInner() {
         // ✅ Collect upsert operations (no DB calls in loop)
         const upsertOps = [];
 
-        // ✅ Pre-fetch Actual rows as fallback if cache is missing (Crucial for output_based machines)
+        // ✅ Pre-fetch Actual rows as fallback if cache is missing.
         const allActualRows = await prisma.tb_output_actual.findMany({ where: { date: targetDate } });
         // ✅ SUM ทุก model row เป็น fallback เมื่อ cache ว่าง (รองรับ multi-model per day)
         const actualSumMap = {};
@@ -706,8 +668,6 @@ async function _slowPollAndEmitInner() {
 
             // 🆕 ดึง MCStatus ล่าสุดจาก DB records ที่มีอยู่แล้ว (ไม่ต้อง query เพิ่ม)
             const latestMcStatus = mcRecords.length > 0 ? mcRecords[mcRecords.length - 1].MCStatus : null;
-            const modeRunTime = getMachineRunTimeMode(machineName);
-
             // ✅ ดึง CT_target จาก pre-fetched map (ไม่ query DB)
             const targetRow = targetMap[machineName];
             const idealCT = targetRow?.cycle_time_target || 0;
@@ -747,11 +707,6 @@ async function _slowPollAndEmitInner() {
 
             const overallAvgCt = totalOutput > 0 ? sumCtWeighted / totalOutput : 0;
 
-            if (modeRunTime === "output_based") {
-                const avgToUse = overallAvgCt > 0 ? overallAvgCt : idealCT;
-                runTimeSeconds = totalOutput * avgToUse;
-            }
-
             const availability = calcAvailability(runTimeSeconds, excludedSeconds, totalSeconds);
             let performance = calcPerformance(totalOutput, idealCT, runTimeSeconds);
 
@@ -771,15 +726,8 @@ async function _slowPollAndEmitInner() {
                 const currentHourNg = autoNgCache.data[machineName] || 0; // Fast Loop อัปเดตทุก 10s อยู่แล้ว
                 ngQty = pastNg + pendingNg + currentHourNg;
                 
-                if (mCacheConfig.ng_mode === "over_reject") {
-                    // หักลบของเสียออกจากยอดเป้าหมายสำหรับ Performance
-                    const outputForOee = Math.max(0, totalOutput - ngQty);
-                    performance = calcPerformance(outputForOee, idealCT, runTimeSeconds);
-                    quality = 100; // ล็อคให้ Quality เป็น 100% เสมอ
-                } else {
-                    quality = totalOutput > 0 ? ((totalOutput - ngQty) / totalOutput) * 100 : 0;
-                    if (quality < 0) quality = 0;
-                }
+                quality = totalOutput > 0 ? ((totalOutput - ngQty) / totalOutput) * 100 : 0;
+                if (quality < 0) quality = 0;
 
                 oeeValue = (availability > 0 && performance > 0 && quality > 0)
                     ? (availability / 100) * (performance / 100) * (quality / 100) * 100
@@ -795,8 +743,7 @@ async function _slowPollAndEmitInner() {
             let dailyPayload = {
                 availability: parseFloat(availability.toFixed(2)),
                 performance: parseFloat(performance.toFixed(2)),
-                ngQty: mCacheConfig.ng_mode === "over_reject" ? 0 : ngQty,
-                over_reject_qty: mCacheConfig.ng_mode === "over_reject" ? ngQty : undefined,
+                ngQty,
                 oeeMode: mode,
                 // 🆕 [Phase 7] ส่ง hourly array กลับไปเพื่ออัปเดต Availability แกนขวา
                 hourly: {

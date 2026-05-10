@@ -42,29 +42,11 @@ assert.deepEqual(
         availability: 80,
         idealCT: 2,
         runTimeSeconds: 200,
-        ngMode: "visual_ng",
     }),
     {
         outputForOee: 100,
         performance: 100,
         quality: 90,
-        oeeValue: 72,
-    }
-);
-
-assert.deepEqual(
-    calcAutoOeeMetrics({
-        totalOutput: 100,
-        ngQty: 10,
-        availability: 80,
-        idealCT: 2,
-        runTimeSeconds: 200,
-        ngMode: "over_reject",
-    }),
-    {
-        outputForOee: 90,
-        performance: 90,
-        quality: 100,
         oeeValue: 72,
     }
 );
