@@ -7,10 +7,19 @@ const Influx = require("influx");
 
 let influxClient = null;
 
+function isMachineIoEnabled() {
+    return process.env.ENABLE_MACHINE_IO === "true";
+}
+
 /**
  * Initialize InfluxDB 1.x client
  */
 function initClient() {
+    if (!isMachineIoEnabled()) {
+        console.log("Machine I/O disabled: InfluxDB client not initialized.");
+        return null;
+    }
+
     const host = process.env.INFLUX_HOST || "192.168.100.99";
     const port = parseInt(process.env.INFLUX_PORT || "5012", 10);
     const database = process.env.INFLUX_DATABASE || "machine_db";
@@ -29,6 +38,14 @@ function initClient() {
  * Get the client instance
  */
 function getClient() {
+    if (!isMachineIoEnabled()) {
+        return {
+            query: async () => [],
+            queryRaw: async () => ({}),
+            getDatabaseNames: async () => [],
+        };
+    }
+
     if (!influxClient) {
         throw new Error("InfluxDB client not initialized. Call initClient() first.");
     }
@@ -39,6 +56,11 @@ function getClient() {
  * Test connection to InfluxDB
  */
 async function testConnection() {
+    if (!isMachineIoEnabled()) {
+        console.log("Machine I/O disabled: skipping InfluxDB connection test.");
+        return false;
+    }
+
     try {
         const client = getClient();
         const names = await client.getDatabaseNames();
@@ -55,6 +77,8 @@ async function testConnection() {
  * Returns: { "MACHINE_NAME": { output_count: N, avg_cycle_time: N } }
  */
 async function queryAllMachinesForHour(startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return {};
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
 
@@ -119,6 +143,10 @@ async function queryAllMachinesForHour(startUTC, endUTC) {
  * Query a single machine for a specific hour range
  */
 async function queryMachineForHour(machineName, startUTC, endUTC) {
+    if (!isMachineIoEnabled()) {
+        return { output_count: 0, avg_cycle_time: 0 };
+    }
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
 
@@ -153,6 +181,8 @@ async function queryMachineForHour(machineName, startUTC, endUTC) {
  * Returns: { "MACHINE_NAME": { "YYYY-MM-DDTHH": { output_count, avg_cycle_time } } }
  */
 async function queryHoursRange(startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return {};
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
 
@@ -222,6 +252,8 @@ async function queryHoursRange(startUTC, endUTC) {
  * Count NG records for a single machine (judg_result contains "NG")
  */
 async function queryNgCount(machineName, startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return 0;
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
     const startISO = startUTC instanceof Date ? startUTC.toISOString() : startUTC;
@@ -248,6 +280,8 @@ async function queryNgCount(machineName, startUTC, endUTC) {
  * Returns: { "MACHINE_NAME": ng_count }
  */
 async function queryAllMachinesNgCount(startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return {};
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
     const startISO = startUTC instanceof Date ? startUTC.toISOString() : startUTC;
@@ -280,6 +314,8 @@ async function queryAllMachinesNgCount(startUTC, endUTC) {
  * Returns: [{ model_name: "Longspeak10D" }, ...]
  */
 async function queryActualModels(machineName, startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return [];
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
     const startISO = startUTC instanceof Date ? startUTC.toISOString() : startUTC;
@@ -314,6 +350,8 @@ async function queryActualModels(machineName, startUTC, endUTC) {
  * Returns: { "MACHINE_NAME": "ModelName" } (last model per machine in range)
  */
 async function queryAllMachinesModelsForHour(startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return {};
+
     const client = getClient();
     const measurement = process.env.INFLUX_MEASUREMENT || "data_tb";
     const startISO = startUTC instanceof Date ? startUTC.toISOString() : startUTC;
@@ -409,6 +447,8 @@ async function queryNgByStationForHour(machineName, startUTC, endUTC, stationCon
  * Returns: Array of { machine_name, time, status }
  */
 async function queryStatusRange(startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return [];
+
     const client = getClient();
     const measurement = "status_tb";
     const startISO = startUTC instanceof Date ? startUTC.toISOString() : startUTC;
@@ -445,6 +485,8 @@ async function queryStatusRange(startUTC, endUTC) {
  * Returns: Array of { machine_name, time, alarm }
  */
 async function queryAlarmRange(startUTC, endUTC) {
+    if (!isMachineIoEnabled()) return [];
+
     const client = getClient();
     const measurement = "alarm_tb";
     const startISO = startUTC instanceof Date ? startUTC.toISOString() : startUTC;
@@ -476,6 +518,7 @@ async function queryAlarmRange(startUTC, endUTC) {
 }
 
 module.exports = {
+    isMachineIoEnabled,
     initClient,
     getClient,
     testConnection,
