@@ -60,6 +60,29 @@ class SimulatorCoreTests(unittest.TestCase):
         self.assertEqual(len([p for p in second if p["name"] == "data_tb"]), 1)
         self.assertIsInstance(state, MachineRuntimeState)
 
+    def test_plan_stop_emits_status_but_no_output(self):
+        profile = SimulationProfile(
+            name="plan_stop",
+            availability=100,
+            performance=100,
+            quality=100,
+            planned_stop_seconds_per_hour=3600,
+            force_status="Plan_Stop",
+        )
+        machine = {
+            "area": "ECM",
+            "type": "AHV",
+            "name": "AHV-001",
+            "model": "Dorado 10D",
+            "ideal_ct": 4.0,
+        }
+        state = create_machine_state(machine)
+
+        events = generate_machine_events(machine, state, profile, elapsed_seconds=30.0, seq_base=100)
+
+        self.assertEqual([p["name"] for p in events], ["status_tb"])
+        self.assertEqual(events[0]["fields"]["Status"], "Plan_Stop")
+
 
 if __name__ == "__main__":
     unittest.main()

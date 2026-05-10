@@ -39,6 +39,21 @@ DEFAULT_CONFIG = {
 }
 
 
+def default_machine_configs() -> dict[str, dict[str, Any]]:
+    configs: dict[str, dict[str, Any]] = {}
+    for machine in DEFAULT_MACHINES:
+        configs[machine["name"]] = {
+            "enabled": True,
+            "status": "auto",
+            "interval": DEFAULT_CONFIG["interval"],
+            "availability": DEFAULT_CONFIG["availability"],
+            "performance": DEFAULT_CONFIG["performance"],
+            "quality": DEFAULT_CONFIG["quality"],
+            "planned_stop_seconds_per_hour": DEFAULT_CONFIG["planned_stop_seconds_per_hour"],
+        }
+    return configs
+
+
 class SimulatorRunner:
     def __init__(self) -> None:
         self.lock = threading.Lock()
@@ -46,6 +61,7 @@ class SimulatorRunner:
         self.thread: threading.Thread | None = None
         self.running = False
         self.config = DEFAULT_CONFIG.copy()
+        self.machine_configs = default_machine_configs()
         self.stats = {
             "batches": 0,
             "output": 0,
@@ -60,6 +76,10 @@ class SimulatorRunner:
         self.stop()
         with self.lock:
             self.config = {**DEFAULT_CONFIG, **config}
+            self.machine_configs = default_machine_configs()
+            for machine_name, item in (config.get("machine_configs") or {}).items():
+                if machine_name in self.machine_configs:
+                    self.machine_configs[machine_name] = {**self.machine_configs[machine_name], **item}
             self.stats = {
                 "batches": 0,
                 "output": 0,
@@ -90,9 +110,10 @@ class SimulatorRunner:
                     "ideal_ct": machine["ideal_ct"],
                     "target_per_hour": calculate_hourly_target(
                         machine["ideal_ct"],
-                        float(self.config["performance"]),
-                        int(self.config["planned_stop_seconds_per_hour"]),
+                        float(self.machine_configs[machine["name"]]["performance"]),
+                        int(self.machine_configs[machine["name"]]["planned_stop_seconds_per_hour"]),
                     ),
+                    "config": self.machine_configs[machine["name"]],
                 }
                 for machine in machines
             ]
@@ -110,13 +131,19 @@ class SimulatorRunner:
             config = self.config.copy()
             machines = DEFAULT_MACHINES[: int(config["machine_count"])]
             states = {machine["name"]: create_machine_state(machine) for machine in machines}
-            profile = get_profile(
-                str(config["scenario"]),
-                availability=float(config["availability"]),
-                performance=float(config["performance"]),
-                quality=float(config["quality"]),
-                planned_stop_seconds_per_hour=int(config["planned_stop_seconds_per_hour"]),
-            )
+            machine_configs = self.machine_configs.copy()
+            profiles = {
+                machine["name"]: get_profile(
+                    str(config["scenario"]),
+                    availability=float(machine_configs[machine["name"]]["availability"]),
+                    performance=float(machine_configs[machine["name"]]["performance"]),
+                    quality=float(machine_configs[machine["name"]]["quality"]),
+                    planned_stop_seconds_per_hour=int(machine_configs[machine["name"]]["planned_stop_seconds_per_hour"]),
+                    force_status=machine_configs[machine["name"]]["status"],
+                )
+                for machine in machines
+            }
+            next_due = {machine["name"]: 0.0 for machine in machines}
             client = connect_mqtt(str(config["mqtt_url"]))
             start_time = time.time()
 
@@ -126,11 +153,19 @@ class SimulatorRunner:
                 ng_this_batch = 0
 
                 for idx, machine in enumerate(machines):
+                    machine_config = machine_configs[machine["name"]]
+                    if not machine_config.get("enabled", True):
+                        continue
+                    now_mono = time.monotonic()
+                    if now_mono < next_due[machine["name"]]:
+                        continue
+                    interval = max(0.2, float(machine_config["interval"]))
+                    next_due[machine["name"]] = now_mono + interval
                     payloads = generate_machine_events(
                         machine,
                         states[machine["name"]],
-                        profile,
-                        elapsed_seconds=float(config["interval"]),
+                        profiles[machine["name"]],
+                        elapsed_seconds=interval,
                         seq_base=int(time.time() * 1000) + idx * 100,
                     )
                     for payload in payloads:
@@ -146,9 +181,12 @@ class SimulatorRunner:
                                 ng_this_batch += 1
 
                 elapsed = max(1.0, time.time() - start_time)
-                elapsed_machine_seconds = elapsed * len(machines)
-                run_seconds = elapsed_machine_seconds * (profile.availability / 100.0)
-                excluded_seconds = elapsed_machine_seconds * (profile.planned_stop_seconds_per_hour / 3600.0)
+                active_profiles = [profiles[m["name"]] for m in machines if machine_configs[m["name"]].get("enabled", True)]
+                elapsed_machine_seconds = elapsed * max(1, len(active_profiles))
+                avg_availability = sum(p.availability for p in active_profiles) / len(active_profiles) if active_profiles else 0
+                avg_planned_stop = sum(p.planned_stop_seconds_per_hour for p in active_profiles) / len(active_profiles) if active_profiles else 0
+                run_seconds = elapsed_machine_seconds * (avg_availability / 100.0)
+                excluded_seconds = elapsed_machine_seconds * (avg_planned_stop / 3600.0)
                 avg_ideal_ct = sum(float(m["ideal_ct"]) for m in machines) / len(machines)
 
                 with self.lock:
@@ -164,7 +202,7 @@ class SimulatorRunner:
                         ideal_ct=avg_ideal_ct,
                     )
 
-                sleep_for = max(0.0, float(config["interval"]) - (time.time() - batch_start))
+                sleep_for = max(0.05, min(0.25, float(config["interval"]) - (time.time() - batch_start)))
                 self.stop_event.wait(sleep_for)
         except Exception as exc:
             with self.lock:
@@ -204,6 +242,8 @@ HTML = """
     .value { font-size: 28px; font-weight: 800; margin-top: 8px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 9px; border-bottom: 1px solid #24354d; text-align: left; }
+    td input, td select { width: 100%; min-width: 76px; padding: 7px; }
+    td .check { min-width: 18px; width: 18px; }
     .muted { color: #8fa1ba; }
     @media (max-width: 900px) { .grid, .cards { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 560px) { .grid, .cards { grid-template-columns: 1fr; } }
@@ -243,7 +283,7 @@ HTML = """
   </section>
   <section>
     <h2>Targets</h2>
-    <table><thead><tr><th>Machine</th><th>Ideal CT</th><th>Target / hour</th><th>Status</th></tr></thead><tbody id="targets"></tbody></table>
+    <table><thead><tr><th>On</th><th>Machine</th><th>Ideal CT</th><th>Target/hr</th><th>Status</th><th>Interval</th><th>A%</th><th>P%</th><th>Q%</th><th>Live</th></tr></thead><tbody id="targets"></tbody></table>
   </section>
 </main>
 <script>
@@ -267,15 +307,43 @@ async function getStatus() {
     (data.running ? 'Running' : 'Stopped') + ' | batches=' + stats.batches +
     ' | output=' + stats.output + ' | ng=' + stats.ng +
     (stats.last_error ? ' | error=' + stats.last_error : '');
-  document.getElementById('targets').innerHTML = data.targets.map(row => {
+  const editingMachineControls = document.activeElement && document.activeElement.closest && document.activeElement.closest('#targets');
+  if (!editingMachineControls) document.getElementById('targets').innerHTML = data.targets.map(row => {
     const status = stats.last_status[row.machine] || '-';
-    return `<tr><td>${row.machine}</td><td>${row.ideal_ct}s</td><td>${row.target_per_hour}</td><td>${status}</td></tr>`;
+    const cfg = row.config || {};
+    return `<tr data-machine="${row.machine}">
+      <td><input class="check mc-enabled" type="checkbox" ${cfg.enabled ? 'checked' : ''}></td>
+      <td>${row.machine}</td>
+      <td>${row.ideal_ct}s</td>
+      <td>${row.target_per_hour}</td>
+      <td><select class="mc-status">
+        ${['auto','Run_Time','Plan_Stop','Stop_Time','MC_Alarm','Break_Time'].map(v => `<option value="${v}" ${cfg.status === v ? 'selected' : ''}>${v}</option>`).join('')}
+      </select></td>
+      <td><input class="mc-interval" type="number" min="0.2" step="0.1" value="${cfg.interval ?? 1}"></td>
+      <td><input class="mc-a" type="number" min="0" max="100" step="0.1" value="${cfg.availability ?? 95}"></td>
+      <td><input class="mc-p" type="number" min="0" max="150" step="0.1" value="${cfg.performance ?? 96}"></td>
+      <td><input class="mc-q" type="number" min="0" max="100" step="0.1" value="${cfg.quality ?? 98.5}"></td>
+      <td>${status}</td>
+    </tr>`;
   }).join('');
 }
 function readConfig() {
   const ids = ['scenario','machine_count','interval','planned_stop_seconds_per_hour','availability','performance','quality','mqtt_url','influx_url','influx_database'];
   const data = {};
   ids.forEach(id => data[id] = document.getElementById(id).value);
+  data.machine_configs = {};
+  document.querySelectorAll('tr[data-machine]').forEach(row => {
+    const name = row.getAttribute('data-machine');
+    data.machine_configs[name] = {
+      enabled: row.querySelector('.mc-enabled').checked,
+      status: row.querySelector('.mc-status').value,
+      interval: Number(row.querySelector('.mc-interval').value || 1),
+      availability: Number(row.querySelector('.mc-a').value || 95),
+      performance: Number(row.querySelector('.mc-p').value || 96),
+      quality: Number(row.querySelector('.mc-q').value || 98.5),
+      planned_stop_seconds_per_hour: Number(document.getElementById('planned_stop_seconds_per_hour').value || 0),
+    };
+  });
   return data;
 }
 async function startSim() {
@@ -337,6 +405,7 @@ class Handler(BaseHTTPRequestHandler):
                 "performance": float(data.get("performance", DEFAULT_CONFIG["performance"])),
                 "quality": float(data.get("quality", DEFAULT_CONFIG["quality"])),
                 "planned_stop_seconds_per_hour": int(float(data.get("planned_stop_seconds_per_hour", DEFAULT_CONFIG["planned_stop_seconds_per_hour"]))),
+                "machine_configs": data.get("machine_configs", {}),
             }
             RUNNER.start(config)
             self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json")

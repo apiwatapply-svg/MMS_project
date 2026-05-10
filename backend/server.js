@@ -41,6 +41,23 @@ const bodyParser = require("body-parser");
 const port = process.env.PORT || 5005;
 const enableMachineIo = process.env.ENABLE_MACHINE_IO === "true";
 const enableCronWorker = process.env.ENABLE_CRON_WORKER === "true";
+const enableDemoAutoSeed = process.env.DEMO_AUTO_SEED_MSSQL === "true";
+
+function runDemoAutoSeed() {
+  if (!enableDemoAutoSeed) return;
+  const { spawn } = require("child_process");
+  const seed = spawn(process.execPath, ["scripts/seed_demo_until_today.js", "--startup"], {
+    cwd: __dirname,
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true,
+  });
+  seed.stdout.on("data", (data) => console.log(`[DemoSeed] ${data.toString().trim()}`));
+  seed.stderr.on("data", (data) => console.error(`[DemoSeed] ${data.toString().trim()}`));
+  seed.on("exit", (code) => {
+    if (code === 0) console.log("[DemoSeed] Startup demo data check completed.");
+    else console.error(`[DemoSeed] Startup demo data check failed with code ${code}.`);
+  });
+}
 
 // 1️⃣ ต้อง parse JSON ก่อน (สำคัญสุด)
 app.use(express.json());
@@ -247,6 +264,7 @@ let workerCronRef = null; // 🆕 Cron Worker — เก็บ reference สำ�
 // Start Express server FIRST — so frontend can connect immediately
 server.listen(port, () => {
   console.log("🚀 API server running at port", port);
+  runDemoAutoSeed();
 
   if (!enableMachineIo) {
     console.log("Machine I/O disabled: skipping MQTT, InfluxDB, realtime worker, and cron worker.");

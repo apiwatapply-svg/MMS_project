@@ -7,7 +7,9 @@
     "test": "node tests/oeeCalcService.unit.js && node tests/reportDashboardService.unit.js",
     "sim:mqtt": "scripts\\run_simulator.cmd",
     "sim:dashboard": "scripts\\run_dashboard.cmd",
-    "test:sim": "scripts\\test_simulator.cmd"
+    "test:sim": "scripts\\test_simulator.cmd",
+    "seed:demo": "node scripts\\seed_demo_until_today.js",
+    "seed:demo:startup": "node scripts\\seed_demo_until_today.js --startup"
   },
   "author": "",
   "license": "ISC",

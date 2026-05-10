@@ -83,13 +83,16 @@ def calculate_expected_metrics(
 
 def get_profile(name: str, **overrides: Any) -> SimulationProfile:
     base = SCENARIOS.get(name, SCENARIOS["stable"])
+    force_status = overrides.get("force_status", base.force_status)
+    if force_status in ("", "auto", "Auto"):
+        force_status = base.force_status
     values = {
         "name": base.name,
         "availability": float(overrides.get("availability", base.availability)),
         "performance": float(overrides.get("performance", base.performance)),
         "quality": float(overrides.get("quality", base.quality)),
         "planned_stop_seconds_per_hour": int(overrides.get("planned_stop_seconds_per_hour", base.planned_stop_seconds_per_hour)),
-        "force_status": overrides.get("force_status", base.force_status),
+        "force_status": force_status,
     }
     return SimulationProfile(**values)
 

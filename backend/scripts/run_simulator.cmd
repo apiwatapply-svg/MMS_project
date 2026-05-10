@@ -1,10 +1,16 @@
 @echo off
 setlocal
 
-set "LOCAL_PY=..\.tools\python-3.12.8-embed-amd64\python.exe"
+set "LOCAL_PY=%~dp0..\..\.tools\python-3.12.8-embed-amd64\python.exe"
+set "LOCAL_PY_FALLBACK=%~dp0..\..\python-3.12.8-embed-amd64\python.exe"
 
 if exist "%LOCAL_PY%" (
   "%LOCAL_PY%" "%~dp0simulate_machine_mqtt.py" %*
+  exit /b %ERRORLEVEL%
+)
+
+if exist "%LOCAL_PY_FALLBACK%" (
+  "%LOCAL_PY_FALLBACK%" "%~dp0simulate_machine_mqtt.py" %*
   exit /b %ERRORLEVEL%
 )
 

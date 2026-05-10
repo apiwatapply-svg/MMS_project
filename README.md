@@ -137,6 +137,31 @@ npm run sim:dashboard
 
 Open `http://127.0.0.1:5088`, choose the scenario, machine count, interval, Availability, Performance, Quality, and planned stop seconds/hour, then start or stop the simulation.
 
+The dashboard also supports per-machine controls. Each machine can be enabled/disabled and assigned its own status, send interval, Availability, Performance, and Quality. Forced non-running statuses such as `Plan_Stop`, `Stop_Time`, `MC_Alarm`, and `Break_Time` do not emit output records; only `Run_Time` produces `data_tb` output based on accumulated runtime and ideal cycle time.
+
+## Demo MSSQL Data
+
+Historical demo data is kept in MSSQL only up to the current date. Use this when the dashboard needs yesterday/current-day plan, target, actual, CT, NG, runtime, availability, and OEE rows before the live MQTT simulator starts.
+
+```bash
+cd backend
+npm run seed:demo -- --fill-missing-only
+```
+
+For startup mode, which checks yesterday and today only:
+
+```bash
+npm run seed:demo:startup
+```
+
+To run this automatically when `server.js` starts, set:
+
+```env
+DEMO_AUTO_SEED_MSSQL=true
+```
+
+The seed respects the main data invariants: `output = ok + ng`, `ng <= output`, output follows runtime and CT, planned-stop time is excluded from operating time, and OEE is derived from Availability, Performance, and Quality rather than random values.
+
 ## Tests
 
 ```bash
