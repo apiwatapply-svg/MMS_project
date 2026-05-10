@@ -8,6 +8,13 @@ import { getSocket } from '@/app/lib/socketManager';
 
 const apiServer = config.apiServer;
 
+const EXCLUDED_STATUS_KEYS = new Set(['Plan_Stop', 'Break_Time', 'Preventive', 'QC']);
+
+const isExcludedStatus = (status?: string) => {
+    if (!status) return false;
+    return EXCLUDED_STATUS_KEYS.has(status);
+};
+
 
 
 // Unified Grid: 21 columns × (1 header row + 15 machine rows = 16 rows)
@@ -275,11 +282,47 @@ export default function LayoutDashboard() {
             });
         });
 
+        const handleMcStatusUpdated = (data: any) => {
+            const machineName = data?.machine_name;
+            if (!machineName) return;
+
+            if (data.status) {
+                setMachineStatuses(prev => (
+                    prev[machineName] === data.status ? prev : { ...prev, [machineName]: data.status }
+                ));
+
+                if (data.status !== 'MC_Alarm' && data.status !== 'MC_Error') {
+                    setMachineAlarms(prev => {
+                        if (!prev[machineName]) return prev;
+                        const next = { ...prev };
+                        delete next[machineName];
+                        return next;
+                    });
+                }
+            }
+
+            if (data.alarm !== undefined) {
+                setMachineAlarms(prev => {
+                    const alarmText = data.alarm || "";
+                    if (!alarmText) {
+                        if (!prev[machineName]) return prev;
+                        const next = { ...prev };
+                        delete next[machineName];
+                        return next;
+                    }
+                    return prev[machineName] === alarmText ? prev : { ...prev, [machineName]: alarmText };
+                });
+            }
+        };
+
+        socket.on('mc_status_updated', handleMcStatusUpdated);
+
         return () => {
             socket.emit("leaveRoom", "dashboard");
             socket.off('server_time');
             socket.off('realtime_update');
             socket.off('realtime_output');
+            socket.off('mc_status_updated', handleMcStatusUpdated);
         };
     }, []);
 
@@ -359,14 +402,14 @@ export default function LayoutDashboard() {
                 style={{
                     backgroundColor: (() => {
                         const status = machineStatuses[machine.name];
-                        if (status === 'Plan_Stop' || status === 'Break_Time') return '#d5d5d5'; // เทาเข้ม (body)
+                        if (isExcludedStatus(status)) return '#d5d5d5'; // เทาเข้ม (body)
                         if (status === 'Run_Time') return '#e8f5e9'; // Light Green
                         if (status) return '#ffebee'; // Down Time (Light Red)
                         return '#f5f5f5'; // No Data — เทาอ่อน (body)
                     })(),
                     border: `1px solid ${(() => {
                         const status = machineStatuses[machine.name];
-                        if (status === 'Plan_Stop' || status === 'Break_Time') return '#424242'; // เทาเข้ม (border)
+                        if (isExcludedStatus(status)) return '#424242'; // เทาเข้ม (border)
                         if (status === 'Run_Time') return '#2e7d32'; // Dark Green
                         if (status) return '#c62828'; // Down Time (Dark Red)
                         return '#9e9e9e'; // No Data — เทาอ่อน (border)
@@ -401,7 +444,7 @@ export default function LayoutDashboard() {
                     fontWeight: 'bold',
                     backgroundColor: (() => {
                         const status = machineStatuses[machine.name];
-                        if (status === 'Plan_Stop' || status === 'Break_Time') return '#424242'; // เทาเข้ม (header)
+                        if (isExcludedStatus(status)) return '#424242'; // เทาเข้ม (header)
                         if (status === 'Run_Time') return '#2e7d32';
                         if (status) return '#c62828';
                         return '#bdbdbd'; // No Data — เทาอ่อน (header)

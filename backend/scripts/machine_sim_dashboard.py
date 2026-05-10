@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from simulator_core import (
     DEFAULT_MACHINES,
     SCENARIOS,
+    build_status_payload,
     calculate_expected_metrics,
     calculate_hourly_target,
     create_machine_state,
@@ -27,6 +28,7 @@ from simulate_machine_mqtt import connect_mqtt, publish_mqtt, write_influx
 
 
 DEFAULT_MACHINE_COUNT = len(DEFAULT_MACHINES)
+MAX_RUNNING_MACHINES = 10
 
 
 def selected_machines(machine_count: Any) -> list[dict[str, Any]]:
@@ -48,10 +50,11 @@ DEFAULT_CONFIG = {
 
 def default_machine_configs() -> dict[str, dict[str, Any]]:
     configs: dict[str, dict[str, Any]] = {}
-    for machine in DEFAULT_MACHINES:
+    for index, machine in enumerate(DEFAULT_MACHINES):
+        enabled = index < MAX_RUNNING_MACHINES
         configs[machine["name"]] = {
-            "enabled": True,
-            "status": "auto",
+            "enabled": enabled,
+            "status": "auto" if enabled else "Plan_Stop",
             "scan_interval": 0.2,
             "planned_stop_seconds_per_hour": DEFAULT_CONFIG["planned_stop_seconds_per_hour"],
             "ng_rate_pct": round(random.uniform(0, 5), 2),
@@ -65,6 +68,7 @@ class SimulatorRunner:
         self.stop_event = threading.Event()
         self.thread: threading.Thread | None = None
         self.machine_threads: list[threading.Thread] = []
+        self.machine_thread_names: set[str] = set()
         self.running = False
         self.config = DEFAULT_CONFIG.copy()
         self.machine_configs = default_machine_configs()
@@ -89,6 +93,7 @@ class SimulatorRunner:
                     self.machine_configs[machine_name] = {**self.machine_configs[machine_name], **item}
                     if "ng_rate_pct" not in self.machine_configs[machine_name]:
                         self.machine_configs[machine_name]["ng_rate_pct"] = round(random.uniform(0, 5), 2)
+            self._enforce_running_limit_locked()
             self.stats = {
                 "batches": 0,
                 "output": 0,
@@ -110,6 +115,7 @@ class SimulatorRunner:
         if self.thread and self.thread.is_alive():
             self.thread.join(timeout=0.5)
         self.machine_threads = []
+        self.machine_thread_names = set()
         with self.lock:
             self.running = False
 
@@ -117,10 +123,43 @@ class SimulatorRunner:
         with self.lock:
             if machine_name not in self.machine_configs:
                 return False
+            was_enabled = bool(self.machine_configs[machine_name].get("enabled", False))
+            wants_enabled = bool(config.get("enabled", was_enabled))
+            if wants_enabled and not was_enabled and self._running_count_locked() >= MAX_RUNNING_MACHINES:
+                self.stats["last_error"] = f"Cannot enable {machine_name}: maximum {MAX_RUNNING_MACHINES} running machines."
+                return False
             self.machine_configs[machine_name] = {**self.machine_configs[machine_name], **config}
             if "ng_rate_pct" not in self.machine_configs[machine_name]:
                 self.machine_configs[machine_name]["ng_rate_pct"] = round(random.uniform(0, 5), 2)
+            if not self.machine_configs[machine_name].get("enabled", True):
+                self.machine_configs[machine_name]["status"] = "Plan_Stop"
+                machine = next((item for item in DEFAULT_MACHINES if item["name"] == machine_name), None)
+                publish_config = self.config.copy()
+                threading.Thread(target=self._publish_plan_stop_once, args=(machine, publish_config), daemon=True).start()
+            elif self.running and machine_name not in self.machine_thread_names:
+                machine = next((item for item in DEFAULT_MACHINES if item["name"] == machine_name), None)
+                if machine:
+                    self.machine_states.setdefault(machine_name, create_machine_state(machine))
+                    thread = threading.Thread(target=self._run_machine, args=(machine,), daemon=True)
+                    self.machine_threads.append(thread)
+                    self.machine_thread_names.add(machine_name)
+                    thread.start()
             return True
+
+    def _running_count_locked(self) -> int:
+        return sum(1 for config in self.machine_configs.values() if config.get("enabled", True))
+
+    def _enforce_running_limit_locked(self) -> None:
+        running = 0
+        for machine in DEFAULT_MACHINES:
+            config = self.machine_configs[machine["name"]]
+            if config.get("enabled", True):
+                running += 1
+                if running > MAX_RUNNING_MACHINES:
+                    config["enabled"] = False
+                    config["status"] = "Plan_Stop"
+            elif config.get("status") in ("", "auto", "Auto", None):
+                config["status"] = "Plan_Stop"
 
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
@@ -147,6 +186,8 @@ class SimulatorRunner:
                 "running": self.running,
                 "config": self.config,
                 "stats": self.stats,
+                "running_machine_count": self._running_count_locked(),
+                "max_running_machines": MAX_RUNNING_MACHINES,
                 "targets": target_rows,
                 "scenarios": {name: profile.__dict__ for name, profile in SCENARIOS.items()},
             }
@@ -184,16 +225,68 @@ class SimulatorRunner:
         states = {machine["name"]: create_machine_state(machine) for machine in machines}
         with self.lock:
             self.machine_states = states
+            active_names = [
+                machine["name"]
+                for machine in machines
+                if self.machine_configs[machine["name"]].get("enabled", True)
+            ][:MAX_RUNNING_MACHINES]
+            active_name_set = set(active_names)
 
         self.machine_threads = [
             threading.Thread(target=self._run_machine, args=(machine,), daemon=True)
             for machine in machines
+            if machine["name"] in active_name_set
         ]
+        self.machine_thread_names = active_name_set.copy()
         for thread in self.machine_threads:
             thread.start()
 
+        threading.Thread(target=self._publish_plan_stop_for_inactive, args=(machines, config), daemon=True).start()
         self.thread = threading.Thread(target=self._run_metrics, args=(machines,), daemon=True)
         self.thread.start()
+
+    def _publish_plan_stop_for_inactive(self, machines: list[dict[str, Any]], config: dict[str, Any]) -> None:
+        client = None
+        try:
+            client = connect_mqtt(str(config["mqtt_url"]))
+            for machine in machines:
+                with self.lock:
+                    enabled = self.machine_configs[machine["name"]].get("enabled", True)
+                if enabled:
+                    continue
+                with self.lock:
+                    self.stats["last_status"][machine["name"]] = "Plan_Stop"
+                payload = build_status_payload(machine, "Plan_Stop")
+                topic = f"factory/{machine['type']}/{machine['name']}/{payload['name']}"
+                publish_mqtt(client, str(config["mqtt_url"]), topic, payload)
+                write_influx(str(config["influx_url"]), str(config["influx_database"]), payload)
+        except Exception as exc:
+            with self.lock:
+                self.stats["last_error"] = f"Plan_Stop publish failed: {exc}"
+        finally:
+            if client is not None:
+                client.loop_stop()
+                client.disconnect()
+
+    def _publish_plan_stop_once(self, machine: dict[str, Any] | None, config: dict[str, Any]) -> None:
+        if not machine:
+            return
+        client = None
+        try:
+            payload = build_status_payload(machine, "Plan_Stop")
+            client = connect_mqtt(str(config["mqtt_url"]))
+            topic = f"factory/{machine['type']}/{machine['name']}/{payload['name']}"
+            publish_mqtt(client, str(config["mqtt_url"]), topic, payload)
+            write_influx(str(config["influx_url"]), str(config["influx_database"]), payload)
+            with self.lock:
+                self.stats["last_status"][machine["name"]] = "Plan_Stop"
+        except Exception as exc:
+            with self.lock:
+                self.stats["last_error"] = f"{machine['name']}: Plan_Stop publish failed: {exc}"
+        finally:
+            if client is not None:
+                client.loop_stop()
+                client.disconnect()
 
     def _run_machine(self, machine: dict[str, Any]) -> None:
         client = None
@@ -357,8 +450,7 @@ HTML = """
         <div id="state" class="muted">Loading...</div>
       </div>
       <div class="toolbar">
-        <label class="muted">Machines <input id="machine_count" type="number" min="1" max="__MACHINE_TOTAL__" value="__MACHINE_TOTAL__" style="width:76px"></label>
-        <span class="muted">/ All</span>
+        <span class="muted">Active max: __MAX_RUNNING__ / Display: __MACHINE_TOTAL__</span>
         <button class="start" onclick="startSim()">Start</button>
         <button class="stop" onclick="stopSim()">Stop</button>
       </div>
@@ -395,6 +487,7 @@ HTML = """
         <div><span class="dot" style="background:#f7c948"></span>Plan_Stop / Break_Time / Preventive / QC: no output</div>
         <div><span class="dot" style="background:#8b9bb0"></span>Stop_Time: no output</div>
         <div><span class="dot" style="background:#f04438"></span>MC_Alarm: status + alarm, no output</div>
+        <div class="muted">Only enabled machines publish production data. Disabled machines publish Plan_Stop. Maximum enabled machines: __MAX_RUNNING__.</div>
         <div class="muted">NG is randomized per machine between 0-5% and never exceeds output.</div>
       </div>
     </div>
@@ -434,7 +527,7 @@ async function getStatus() {
   document.getElementById('a').textContent = (stats.metrics?.availability || 0) + '%';
   document.getElementById('p').textContent = (stats.metrics?.performance || 0) + '%';
   document.getElementById('oee').textContent = (stats.metrics?.oee || 0) + '%';
-  document.getElementById('state').textContent = `${latest.running ? 'RUNNING' : 'STOPPED'} | batches=${stats.batches || 0} | started=${stats.started_at || '-'}`;
+  document.getElementById('state').textContent = `${latest.running ? 'RUNNING' : 'STOPPED'} | active=${latest.running_machine_count || 0}/${latest.max_running_machines || __MAX_RUNNING__} | batches=${stats.batches || 0} | started=${stats.started_at || '-'}`;
   renderMachines();
 }
 
@@ -450,10 +543,10 @@ function renderMachines() {
   const machineLayers = latest.targets.map(row => {
     const cfg = machineConfigs[row.machine] || row.config || {};
     machineConfigs[row.machine] = { ...cfg };
-    const liveStatus = latest.stats.last_status[row.machine] || cfg.status || 'Offline';
+    const disabled = cfg.enabled === false || cfg.enabled === 'false';
+    const liveStatus = disabled ? 'Plan_Stop' : (latest.stats.last_status[row.machine] || cfg.status || 'Offline');
     const state = row.state || {};
     const metrics = state.metrics || {};
-    const disabled = cfg.enabled === false || cfg.enabled === 'false';
     const offset = AREA_OFFSET[row.area] || { colOffset: 1, rowOffset: 2 };
     const layout = row.layout || { row: 0, col: 0 };
     const gridCol = layout.col + offset.colOffset;
@@ -461,7 +554,7 @@ function renderMachines() {
     return `<div class="machine-cell" style="grid-column:${gridCol};grid-row:${gridRow};">
     <div class="machine ${disabled ? 'off' : ''} ${statusClass(liveStatus)} ${selected === row.machine ? 'selected' : ''}" onclick="selectMachine('${row.machine}')">
       <div class="name">${row.machine}</div>
-      <div class="status">${disabled ? 'Disabled' : liveStatus}</div>
+      <div class="status">${liveStatus}</div>
       <div class="numbers">
         <div><span>OUT</span><br><b>${state.output || 0}</b></div>
         <div><span>NG</span><br><b>${state.ng || 0}</b></div>
@@ -498,6 +591,15 @@ async function applyPanel() {
     method: 'POST',
     headers: {'content-type':'application/json'},
     body: JSON.stringify({ machine: selected, config: machineConfigs[selected] })
+  }).then(async res => {
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.ok === false) {
+      alert(body.message || `Maximum ${latest?.max_running_machines || __MAX_RUNNING__} machines can be enabled.`);
+      if (latest?.targets) {
+        const row = latest.targets.find(x => x.machine === selected);
+        if (row?.config) machineConfigs[selected] = { ...row.config };
+      }
+    }
   });
   await getStatus();
   renderMachines();
@@ -506,7 +608,7 @@ async function applyPanel() {
 function readConfig() {
   return {
     scenario: 'stable',
-    machine_count: Number(document.getElementById('machine_count').value || __MACHINE_TOTAL__),
+    machine_count: __MACHINE_TOTAL__,
     interval: 0.05,
     planned_stop_seconds_per_hour: 120,
     mqtt_url: document.getElementById('mqtt_url').value,
@@ -535,6 +637,7 @@ getStatus();
 """
 
 HTML = HTML.replace("__MACHINE_TOTAL__", str(DEFAULT_MACHINE_COUNT))
+HTML = HTML.replace("__MAX_RUNNING__", str(MAX_RUNNING_MACHINES))
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -574,7 +677,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/api/machine-config":
             ok = RUNNER.update_machine_config(str(data.get("machine", "")), data.get("config", {}))
-            self._send(200 if ok else 404, json.dumps({"ok": ok}).encode("utf-8"), "application/json")
+            status = 200 if ok else 400
+            self._send(
+                status,
+                json.dumps({"ok": ok, "message": RUNNER.stats.get("last_error", "")}).encode("utf-8"),
+                "application/json",
+            )
             return
         if self.path == "/api/stop":
             RUNNER.stop()
