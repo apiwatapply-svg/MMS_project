@@ -334,7 +334,10 @@ module.exports = {
     getDailyDashboard,
     getMonthlyDashboard,
     __private: {
+        aggregateDailyRows,
+        aggregateDowntime,
         aggregateMonthlyRows,
+        buildTimeBuckets,
         effectiveMonthDays,
         isFutureMonth,
         perDay,

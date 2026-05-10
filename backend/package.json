@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/oeeCalcService.unit.js && node tests/reportDashboardService.unit.js",
+    "test": "node tests/oeeCalcService.unit.js && node tests/actualOutputService.unit.js && node tests/timeUtils.unit.js && node tests/memoryOeeService.unit.js && node tests/reportDashboardService.unit.js",
     "sim:mqtt": "scripts\\run_simulator.cmd",
     "sim:dashboard": "scripts\\run_dashboard.cmd",
     "test:sim": "scripts\\test_simulator.cmd",
