@@ -40,9 +40,53 @@ jobs:
         working-directory: backend
         run: npm run prisma:generate
 
-      - name: Run backend unit tests
+      - name: Test OEE calc service
         working-directory: backend
-        run: npm test
+        run: node tests/oeeCalcService.unit.js
+
+      - name: Test actual output service
+        working-directory: backend
+        run: node tests/actualOutputService.unit.js
+
+      - name: Test time utils
+        working-directory: backend
+        run: node tests/timeUtils.unit.js
+
+      - name: Test memory OEE service
+        working-directory: backend
+        run: node tests/memoryOeeService.unit.js
+
+      - name: Test cache service
+        working-directory: backend
+        run: node tests/cacheService.unit.js
+
+      - name: Test plan config controller
+        working-directory: backend
+        run: node tests/planConfigController.unit.js
+
+      - name: Test OEE update controller
+        working-directory: backend
+        run: node tests/oeeUpdateController.unit.js
+
+      - name: Test auto-only policy
+        working-directory: backend
+        run: node tests/autoOnlyPolicy.unit.js
+
+      - name: Test MQTT service
+        working-directory: backend
+        run: node tests/mqttService.unit.js
+
+      - name: Test machine NG controller
+        working-directory: backend
+        run: node tests/machineNgController.unit.js
+
+      - name: Test report dashboard service
+        working-directory: backend
+        run: node tests/reportDashboardService.unit.js
+
+      - name: Test frontend display guards
+        working-directory: backend
+        run: node tests/frontendDisplay.unit.js
 
       - name: Run simulator unit tests
         working-directory: backend
