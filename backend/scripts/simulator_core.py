@@ -224,7 +224,7 @@ def generate_machine_events(
     status = current_status(profile, state.elapsed_in_hour)
     if status == "Run_Time":
         state.run_seconds += elapsed_seconds
-    elif status in ("Plan_Stop", "Break_Time") or "Preventive" in status:
+    elif status in ("Plan_Stop", "Break_Time", "QC") or "Preventive" in status:
         state.excluded_seconds += elapsed_seconds
 
     if status != state.last_status:

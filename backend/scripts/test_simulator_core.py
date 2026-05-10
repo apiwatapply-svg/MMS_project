@@ -117,6 +117,33 @@ class SimulatorCoreTests(unittest.TestCase):
         self.assertEqual(state.output_count, 0)
         self.assertEqual(state.ng_count, 0)
 
+    def test_preventive_and_qc_emit_status_but_no_output(self):
+        machine = {
+            "area": "ECM",
+            "type": "AHV",
+            "name": "AHV-001",
+            "model": "Dorado 10D",
+            "ideal_ct": 4.0,
+        }
+        for status in ("Preventive", "QC"):
+            profile = SimulationProfile(
+                name=status,
+                availability=100,
+                performance=100,
+                quality=100,
+                planned_stop_seconds_per_hour=0,
+                force_status=status,
+            )
+            state = create_machine_state(machine)
+
+            events = generate_machine_events(machine, state, profile, elapsed_seconds=30.0, seq_base=100)
+
+            self.assertEqual([p["name"] for p in events], ["status_tb"])
+            self.assertEqual(events[0]["fields"]["Status"], status)
+            self.assertEqual(state.output_count, 0)
+            self.assertEqual(state.ng_count, 0)
+            self.assertEqual(state.excluded_seconds, 30.0)
+
     def test_ng_count_is_randomized_but_capped_by_configured_rate(self):
         profile = SimulationProfile(
             name="stable",

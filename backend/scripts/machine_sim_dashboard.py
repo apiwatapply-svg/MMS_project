@@ -109,6 +109,15 @@ class SimulatorRunner:
         with self.lock:
             self.running = False
 
+    def update_machine_config(self, machine_name: str, config: dict[str, Any]) -> bool:
+        with self.lock:
+            if machine_name not in self.machine_configs:
+                return False
+            self.machine_configs[machine_name] = {**self.machine_configs[machine_name], **config}
+            if "ng_rate_pct" not in self.machine_configs[machine_name]:
+                self.machine_configs[machine_name]["ng_rate_pct"] = round(random.uniform(0, 5), 2)
+            return True
+
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
             machines = selected_machines(self.config["machine_count"])
@@ -172,19 +181,6 @@ class SimulatorRunner:
             states = {machine["name"]: create_machine_state(machine) for machine in machines}
             with self.lock:
                 self.machine_states = states
-            machine_configs = self.machine_configs.copy()
-            profiles = {
-                machine["name"]: get_profile(
-                    str(config["scenario"]),
-                    availability=100,
-                    performance=100,
-                    quality=100,
-                    planned_stop_seconds_per_hour=int(machine_configs[machine["name"]]["planned_stop_seconds_per_hour"]),
-                    force_status=machine_configs[machine["name"]]["status"],
-                    ng_rate_pct=float(machine_configs[machine["name"]].get("ng_rate_pct", random.uniform(0, 5))),
-                )
-                for machine in machines
-            }
             next_due = {machine["name"]: 0.0 for machine in machines}
             last_tick = {machine["name"]: time.monotonic() for machine in machines}
             client = connect_mqtt(str(config["mqtt_url"]))
@@ -196,9 +192,19 @@ class SimulatorRunner:
                 ng_this_batch = 0
 
                 for idx, machine in enumerate(machines):
-                    machine_config = machine_configs[machine["name"]]
+                    with self.lock:
+                        machine_config = self.machine_configs[machine["name"]].copy()
                     if not machine_config.get("enabled", True):
                         continue
+                    profile = get_profile(
+                        str(config["scenario"]),
+                        availability=100,
+                        performance=100,
+                        quality=100,
+                        planned_stop_seconds_per_hour=int(machine_config["planned_stop_seconds_per_hour"]),
+                        force_status=machine_config["status"],
+                        ng_rate_pct=float(machine_config.get("ng_rate_pct", random.uniform(0, 5))),
+                    )
                     now_mono = time.monotonic()
                     if now_mono < next_due[machine["name"]]:
                         continue
@@ -209,7 +215,7 @@ class SimulatorRunner:
                     payloads = generate_machine_events(
                         machine,
                         states[machine["name"]],
-                        profiles[machine["name"]],
+                        profile,
                         elapsed_seconds=elapsed_seconds,
                         seq_base=int(time.time() * 1000) + idx * 100,
                     )
@@ -226,7 +232,9 @@ class SimulatorRunner:
                                 ng_this_batch += 1
 
                 elapsed = max(1.0, time.time() - start_time)
-                active_states = [states[m["name"]] for m in machines if machine_configs[m["name"]].get("enabled", True)]
+                with self.lock:
+                    active_machine_names = {m["name"] for m in machines if self.machine_configs[m["name"]].get("enabled", True)}
+                active_states = [states[machine_name] for machine_name in active_machine_names]
                 elapsed_machine_seconds = sum(s.total_seconds for s in active_states) or elapsed
                 run_seconds = sum(s.run_seconds for s in active_states)
                 excluded_seconds = sum(s.excluded_seconds for s in active_states)
@@ -290,7 +298,7 @@ HTML = """
     .machine.selected { outline: 3px solid #f7c948; }
     .machine.off { opacity: .45; }
     .machine.Run_Time { border-color: #17b26a; box-shadow: inset 0 0 0 1px rgba(23,178,106,.35); }
-    .machine.Plan_Stop, .machine.Break_Time { border-color: #f7c948; }
+    .machine.Plan_Stop, .machine.Break_Time, .machine.Preventive, .machine.QC { border-color: #f7c948; }
     .machine.Stop_Time { border-color: #8b9bb0; }
     .machine.MC_Alarm { border-color: #f04438; animation: pulse 1s infinite; }
     @keyframes pulse { 50% { box-shadow: 0 0 22px rgba(240,68,56,.5); } }
@@ -336,7 +344,7 @@ HTML = """
     <div class="panel">
       <h2 id="panel-title" style="margin:0">Select Machine</h2>
       <label>Enable <select id="mc-enabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></label>
-      <label>Status <select id="mc-status"><option>auto</option><option>Run_Time</option><option>Plan_Stop</option><option>Stop_Time</option><option>MC_Alarm</option><option>Break_Time</option></select></label>
+      <label>Status <select id="mc-status"><option>auto</option><option>Run_Time</option><option>Plan_Stop</option><option>Stop_Time</option><option>MC_Alarm</option><option>Break_Time</option><option>Preventive</option><option>QC</option></select></label>
       <div class="row">
         <label>Status scan (sec)<input id="mc-interval" type="number" min="0.05" step="0.05" value="0.2"></label>
         <label>Planned stop sec/hr<input id="mc-plan" type="number" min="0" max="3600" value="120"></label>
@@ -352,7 +360,7 @@ HTML = """
       <h2 style="margin:0">Status Legend</h2>
       <div class="legend">
         <div><span class="dot" style="background:#17b26a"></span>Run_Time: output follows runtime / ideal CT</div>
-        <div><span class="dot" style="background:#f7c948"></span>Plan_Stop / Break_Time: no output</div>
+        <div><span class="dot" style="background:#f7c948"></span>Plan_Stop / Break_Time / Preventive / QC: no output</div>
         <div><span class="dot" style="background:#8b9bb0"></span>Stop_Time: no output</div>
         <div><span class="dot" style="background:#f04438"></span>MC_Alarm: status + alarm, no output</div>
         <div class="muted">NG is randomized per machine between 0-5% and never exceeds output.</div>
@@ -417,7 +425,7 @@ function selectMachine(name) {
   renderMachines();
 }
 
-function applyPanel() {
+async function applyPanel() {
   if (!selected) return;
   machineConfigs[selected] = {
     ...(machineConfigs[selected] || {}),
@@ -426,6 +434,12 @@ function applyPanel() {
     scan_interval: Number(document.getElementById('mc-interval').value || 0.2),
     planned_stop_seconds_per_hour: Number(document.getElementById('mc-plan').value || 0),
   };
+  await fetch('/api/machine-config', {
+    method: 'POST',
+    headers: {'content-type':'application/json'},
+    body: JSON.stringify({ machine: selected, config: machineConfigs[selected] })
+  });
+  await getStatus();
   renderMachines();
 }
 
@@ -443,7 +457,7 @@ function readConfig() {
 }
 
 async function startSim() {
-  if (selected) applyPanel();
+  if (selected) await applyPanel();
   await fetch('/api/start', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(readConfig()) });
   await getStatus();
 }
@@ -497,6 +511,10 @@ class Handler(BaseHTTPRequestHandler):
             }
             RUNNER.start(config)
             self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json")
+            return
+        if self.path == "/api/machine-config":
+            ok = RUNNER.update_machine_config(str(data.get("machine", "")), data.get("config", {}))
+            self._send(200 if ok else 404, json.dumps({"ok": ok}).encode("utf-8"), "application/json")
             return
         if self.path == "/api/stop":
             RUNNER.stop()
