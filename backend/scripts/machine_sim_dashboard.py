@@ -26,11 +26,20 @@ from simulator_core import (
 from simulate_machine_mqtt import connect_mqtt, publish_mqtt, write_influx
 
 
+DEFAULT_MACHINE_COUNT = len(DEFAULT_MACHINES)
+
+
+def selected_machines(machine_count: Any) -> list[dict[str, Any]]:
+    count = int(float(machine_count or DEFAULT_MACHINE_COUNT))
+    count = max(1, min(count, DEFAULT_MACHINE_COUNT))
+    return DEFAULT_MACHINES[:count]
+
+
 DEFAULT_CONFIG = {
     "mqtt_url": os.environ.get("MQTT_URL", "mqtt://127.0.0.1:1883"),
     "influx_url": os.environ.get("INFLUX_URL", f"http://{os.environ.get('INFLUX_HOST', '127.0.0.1')}:{os.environ.get('INFLUX_PORT', '8086')}"),
     "influx_database": os.environ.get("INFLUX_DATABASE", "machine_db"),
-    "machine_count": 8,
+    "machine_count": DEFAULT_MACHINE_COUNT,
     "interval": 0.05,
     "scenario": "stable",
     "planned_stop_seconds_per_hour": SCENARIOS["stable"].planned_stop_seconds_per_hour,
@@ -102,7 +111,7 @@ class SimulatorRunner:
 
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
-            machines = DEFAULT_MACHINES[: int(self.config["machine_count"])]
+            machines = selected_machines(self.config["machine_count"])
             target_rows = [
                 {
                     "machine": machine["name"],
@@ -159,7 +168,7 @@ class SimulatorRunner:
         client = None
         try:
             config = self.config.copy()
-            machines = DEFAULT_MACHINES[: int(config["machine_count"])]
+            machines = selected_machines(config["machine_count"])
             states = {machine["name"]: create_machine_state(machine) for machine in machines}
             with self.lock:
                 self.machine_states = states
@@ -308,7 +317,8 @@ HTML = """
         <div id="state" class="muted">Loading...</div>
       </div>
       <div class="toolbar">
-        <label class="muted">Machines <input id="machine_count" type="number" min="1" max="10" value="10" style="width:76px"></label>
+        <label class="muted">Machines <input id="machine_count" type="number" min="1" max="__MACHINE_TOTAL__" value="__MACHINE_TOTAL__" style="width:76px"></label>
+        <span class="muted">/ All</span>
         <button class="start" onclick="startSim()">Start</button>
         <button class="stop" onclick="stopSim()">Stop</button>
       </div>
@@ -422,7 +432,7 @@ function applyPanel() {
 function readConfig() {
   return {
     scenario: 'stable',
-    machine_count: Number(document.getElementById('machine_count').value || 10),
+    machine_count: Number(document.getElementById('machine_count').value || __MACHINE_TOTAL__),
     interval: 0.05,
     planned_stop_seconds_per_hour: 120,
     mqtt_url: document.getElementById('mqtt_url').value,
@@ -449,6 +459,8 @@ getStatus();
 </body>
 </html>
 """
+
+HTML = HTML.replace("__MACHINE_TOTAL__", str(DEFAULT_MACHINE_COUNT))
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -477,7 +489,7 @@ class Handler(BaseHTTPRequestHandler):
                 "mqtt_url": data.get("mqtt_url", DEFAULT_CONFIG["mqtt_url"]),
                 "influx_url": data.get("influx_url", DEFAULT_CONFIG["influx_url"]),
                 "influx_database": data.get("influx_database", DEFAULT_CONFIG["influx_database"]),
-                "machine_count": int(float(data.get("machine_count", DEFAULT_CONFIG["machine_count"]))),
+                "machine_count": len(selected_machines(data.get("machine_count", DEFAULT_CONFIG["machine_count"]))),
                 "interval": float(data.get("interval", DEFAULT_CONFIG["interval"])),
                 "scenario": data.get("scenario", DEFAULT_CONFIG["scenario"]),
                 "planned_stop_seconds_per_hour": int(float(data.get("planned_stop_seconds_per_hour", DEFAULT_CONFIG["planned_stop_seconds_per_hour"]))),
