@@ -88,6 +88,42 @@ To preview without writing:
 node scripts/seed_portfolio_may_jun_2026.js --dry-run
 ```
 
+## Live MQTT / InfluxDB Demo Simulator
+
+For an interview or local demo, MMS can run with live machine-style data instead of static report data.
+
+1. Start MQTT broker and InfluxDB 1.x locally or point `.env` to existing services.
+
+```env
+ENABLE_MACHINE_IO=true
+MQTT_URL="mqtt://127.0.0.1:1883"
+INFLUX_HOST="127.0.0.1"
+INFLUX_PORT="8086"
+INFLUX_DATABASE="machine_db"
+INFLUX_URL="http://127.0.0.1:8086"
+```
+
+2. Install Python 3.11+ if it is not available, then install the simulator dependency.
+
+```bash
+cd backend
+py -m pip install -r scripts/requirements-simulator.txt
+```
+
+3. Start the backend with machine I/O enabled.
+
+```bash
+node server.js
+```
+
+4. In another terminal, publish simulated machine data from 5-10 machine types.
+
+```bash
+npm run sim:mqtt -- --types 8 --interval 1 --cycles 120
+```
+
+Use `--cycles 0` for continuous mode, or `--no-influx` if you only want MQTT memory updates. The simulator publishes `data_tb`, `status_tb`, and `alarm_tb` payloads under `factory/{type}/{machine}/{measurement}` and writes the same records to InfluxDB line protocol so current-hour dashboard data can be queried.
+
 ## Tests
 
 ```bash

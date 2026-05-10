@@ -49,13 +49,18 @@ export default function page() {
                 return;
             }
 
-            await fetchDataMachineArea();
+            const loadedAreas = await fetchDataMachineArea();
             const savedArea = localStorage.getItem("machineAreaLocal") || "";
             const savedTypeFilter = localStorage.getItem("machineTypeFilterLocal") || "";
             setTypeFilter(savedTypeFilter);
-            if (savedArea) {
-                setAreaSelected(savedArea);
-                await fetchDataMachineTypesWithName(savedArea);
+
+            const defaultArea = savedArea || loadedAreas?.[0]?.machine_area || "";
+            if (defaultArea) {
+                setAreaSelected(defaultArea);
+                if (!savedArea) {
+                    localStorage.setItem("machineAreaLocal", defaultArea);
+                }
+                await fetchDataMachineTypesWithName(defaultArea);
             }
 
             const hour = now.getHours();
@@ -176,13 +181,16 @@ export default function page() {
     const fetchDataMachineArea = async () => {
         try {
             const rows = await axios.get(config.apiServer + "/api/machine/listArea")
-            setAreas(rows.data.results)
+            const results = rows.data.results || [];
+            setAreas(results);
+            return results;
         } catch (e: any) {
             Swal.fire({
                 title: "error fetchData",
                 text: e.message,
                 icon: "error",
             });
+            return [];
         }
     };
 
