@@ -127,14 +127,25 @@ npm run sim:mqtt -- --types 8 --interval 1 --cycles 120
 
 Use `--cycles 0` for continuous mode, or `--no-influx` if you only want MQTT memory updates. The simulator publishes `data_tb`, `status_tb`, and `alarm_tb` payloads under `factory/{type}/{machine}/{measurement}` and writes the same records to InfluxDB line protocol so current-hour dashboard data can be queried.
 
+The simulator is target-aware. It calculates output rate from `Run_Time x Performance / Ideal CT`, calculates hourly target from `(3600 - planned stop seconds) / Ideal CT x target efficiency`, and exposes scenarios such as `stable`, `downtime`, `quality_issue`, `planned_stop`, and `alarm`.
+
+To control scenarios from a small Python dashboard:
+
+```bash
+npm run sim:dashboard
+```
+
+Open `http://127.0.0.1:5088`, choose the scenario, machine count, interval, Availability, Performance, Quality, and planned stop seconds/hour, then start or stop the simulation.
+
 ## Tests
 
 ```bash
 cd backend
 npm test
+npm run test:sim
 ```
 
-Current unit tests cover OEE calculation rules, hourly aggregation, actual output selection, and monthly report bucket logic.
+Current unit tests cover OEE calculation rules, hourly aggregation, actual output selection, monthly report bucket logic, and simulator target/OEE formulas.
 
 ## Production Deployment with PM2
 

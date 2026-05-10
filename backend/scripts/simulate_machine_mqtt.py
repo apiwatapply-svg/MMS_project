@@ -21,34 +21,24 @@ import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 try:
     import paho.mqtt.client as mqtt
 except ImportError:
     mqtt = None
 
-
-DEFAULT_MACHINES = [
-    {"area": "ECM", "type": "AHV", "name": "AHV-001", "model": "Dorado 10D", "ct": (3.8, 5.2)},
-    {"area": "ECM", "type": "AHV", "name": "AHV-002", "model": "Dorado 10D", "ct": (3.8, 5.2)},
-    {"area": "CLASS100", "type": "ABR", "name": "ABR-001", "model": "V4G", "ct": (2.6, 4.8)},
-    {"area": "CLASS100", "type": "ACP", "name": "ACP-002", "model": "Sierra 8D", "ct": (3.0, 5.5)},
-    {"area": "ECM", "type": "ACR", "name": "ACR-001", "model": "Orion 7D", "ct": (4.0, 6.2)},
-    {"area": "CLASS100", "type": "GE2", "name": "GE2-001", "model": "Helios 9D", "ct": (2.8, 4.4)},
-    {"area": "CLASS100", "type": "HEL", "name": "HEL-001", "model": "Nova 6D", "ct": (3.2, 5.0)},
-    {"area": "CLASS100", "type": "LSW", "name": "LSW-001", "model": "Luna 5D", "ct": (3.5, 5.7)},
-    {"area": "CLASS100", "type": "VNS", "name": "VNS-001", "model": "Vega 11D", "ct": (4.2, 6.8)},
-    {"area": "DLC", "type": "DLC", "name": "DLC-002", "model": "Delta 4D", "ct": (5.0, 7.5)},
-]
-
-STATUSES = ["Run_Time", "Run_Time", "Run_Time", "Plan_Stop", "Stop_Time", "MC_Alarm"]
-ALARMS = [
-    "Tray clamp timeout",
-    "Vacuum pressure low",
-    "Part transfer sensor mismatch",
-    "Axis home position warning",
-]
+from simulator_core import (
+    DEFAULT_MACHINES,
+    SCENARIOS,
+    calculate_expected_metrics,
+    create_machine_state,
+    generate_machine_events,
+    get_profile,
+)
 
 
 def env(name: str, default: str) -> str:
@@ -241,12 +231,23 @@ def main() -> int:
     parser.add_argument("--interval", type=float, default=1.0, help="Delay between batches in seconds.")
     parser.add_argument("--cycles", type=int, default=120, help="Number of batches. Use 0 for continuous mode.")
     parser.add_argument("--no-influx", action="store_true", help="Publish MQTT only.")
-    parser.add_argument("--status-every", type=int, default=8, help="Publish status events every N batches.")
-    parser.add_argument("--alarm-every", type=int, default=25, help="Publish alarm events every N batches.")
+    parser.add_argument("--scenario", choices=sorted(SCENARIOS.keys()), default="stable", help="Machine situation profile.")
+    parser.add_argument("--availability", type=float, help="Override scenario availability percent.")
+    parser.add_argument("--performance", type=float, help="Override scenario performance percent.")
+    parser.add_argument("--quality", type=float, help="Override scenario quality percent.")
+    parser.add_argument("--planned-stop", type=int, help="Override planned stop seconds per hour.")
     args = parser.parse_args()
 
     machine_count = max(1, min(args.types, len(DEFAULT_MACHINES)))
     machines = DEFAULT_MACHINES[:machine_count]
+    profile = get_profile(
+        args.scenario,
+        availability=args.availability if args.availability is not None else SCENARIOS[args.scenario].availability,
+        performance=args.performance if args.performance is not None else SCENARIOS[args.scenario].performance,
+        quality=args.quality if args.quality is not None else SCENARIOS[args.scenario].quality,
+        planned_stop_seconds_per_hour=args.planned_stop if args.planned_stop is not None else SCENARIOS[args.scenario].planned_stop_seconds_per_hour,
+    )
+    states = {machine["name"]: create_machine_state(machine) for machine in machines}
 
     client = connect_mqtt(args.mqtt_url)
     publisher = "paho-mqtt" if client is not None else "mosquitto_pub.exe"
@@ -254,25 +255,57 @@ def main() -> int:
     if not args.no_influx:
         print(f"[InfluxDB] writing to {args.influx_url}/{args.influx_database}")
     print(f"[Simulator] machines: {', '.join(m['name'] for m in machines)}")
+    print(
+        "[Scenario] "
+        f"{profile.name} | A={profile.availability}% P={profile.performance}% Q={profile.quality}% "
+        f"planned_stop={profile.planned_stop_seconds_per_hour}s/hr"
+    )
 
     batch = 0
+    produced = 0
+    ng_qty = 0
     try:
         while args.cycles == 0 or batch < args.cycles:
             batch += 1
             for idx, machine in enumerate(machines):
-                payloads = [build_data_payload(machine, batch * 100 + idx)]
-                if args.status_every > 0 and batch % args.status_every == 0:
-                    payloads.append(build_status_payload(machine))
-                if args.alarm_every > 0 and batch % args.alarm_every == 0:
-                    payloads.append(build_alarm_payload(machine))
+                payloads = generate_machine_events(
+                    machine,
+                    states[machine["name"]],
+                    profile,
+                    elapsed_seconds=args.interval,
+                    seq_base=batch * 1000 + idx * 100,
+                )
 
                 for payload in payloads:
                     topic = f"factory/{machine['type']}/{machine['name']}/{payload['name']}"
                     publish_mqtt(client, args.mqtt_url, topic, payload)
                     if not args.no_influx:
                         write_influx(args.influx_url, args.influx_database, payload)
+                    if payload["name"] == "data_tb":
+                        produced += 1
+                        if payload["fields"].get("ng_indicator") == "NG":
+                            ng_qty += 1
 
-            print(f"[Simulator] batch {batch} sent for {machine_count} machines")
+            if batch % 5 == 0 or args.cycles == 1:
+                elapsed_total = batch * args.interval * machine_count
+                run_seconds = elapsed_total * (profile.availability / 100.0)
+                excluded_seconds = elapsed_total * (profile.planned_stop_seconds_per_hour / 3600.0)
+                avg_ideal_ct = sum(float(m["ideal_ct"]) for m in machines) / len(machines)
+                metrics = calculate_expected_metrics(
+                    total_seconds=elapsed_total,
+                    run_seconds=run_seconds,
+                    excluded_seconds=excluded_seconds,
+                    output_qty=produced,
+                    ng_qty=ng_qty,
+                    ideal_ct=avg_ideal_ct,
+                )
+                print(
+                    f"[Simulator] batch {batch} | output={produced} ng={ng_qty} "
+                    f"A={metrics['availability']} P={metrics['performance']} "
+                    f"Q={metrics['quality']} OEE={metrics['oee']}"
+                )
+            else:
+                print(f"[Simulator] batch {batch} sent for {machine_count} machines")
             time.sleep(args.interval)
     except KeyboardInterrupt:
         print("\n[Simulator] stopped")

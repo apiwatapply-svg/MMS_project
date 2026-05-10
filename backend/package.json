@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "node tests/oeeCalcService.unit.js && node tests/reportDashboardService.unit.js",
-    "sim:mqtt": "scripts\\run_simulator.cmd"
+    "sim:mqtt": "scripts\\run_simulator.cmd",
+    "sim:dashboard": "scripts\\run_dashboard.cmd",
+    "test:sim": "scripts\\test_simulator.cmd"
   },
   "author": "",
   "license": "ISC",
