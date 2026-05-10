@@ -45,6 +45,36 @@ let autoNgCache = {
 }; // 🆕 Cached NG counts for auto machines
 let modeCacheTimer = null;
 
+function round2(value) {
+    return parseFloat((Number(value) || 0).toFixed(2));
+}
+
+function buildAutoDailyPayload({ availability, performance, totalOutput, ngQty, hourly }) {
+    const safeTotalOutput = Math.max(0, Number(totalOutput) || 0);
+    const safeNgQty = Math.max(0, Math.min(Number(ngQty) || 0, safeTotalOutput));
+    const safeAvailability = Number(availability) || 0;
+    const safePerformance = Number(performance) || 0;
+    const quality = safeTotalOutput > 0 ? ((safeTotalOutput - safeNgQty) / safeTotalOutput) * 100 : 0;
+    const oee = (safeAvailability > 0 && safePerformance > 0 && quality > 0)
+        ? (safeAvailability / 100) * (safePerformance / 100) * (quality / 100) * 100
+        : 0;
+
+    const payload = {
+        availability: round2(safeAvailability),
+        performance: round2(safePerformance),
+        quality: round2(quality),
+        oee: round2(oee),
+        ngQty: safeNgQty,
+        oeeMode: "auto",
+    };
+
+    if (hourly) {
+        payload.hourly = hourly;
+    }
+
+    return payload;
+}
+
 /**
  * Start real-time polling — 2 loops
  * @param {Function} _emitFn - (room, event, data) → emit to room
@@ -711,47 +741,21 @@ async function _slowPollAndEmitInner() {
             let performance = calcPerformance(totalOutput, idealCT, runTimeSeconds);
 
             // Quality & OEE — auto NG for every machine.
-            const mode = "auto";
-
-            let quality = 0;
-            let oeeValue = 0;
-            let ngQty = 0;
-
-            if (mode === "auto") {
-                // 🆕 [Step 4] NG total = RAM (past Cron-confirmed) + pending (bridge) + InfluxDB (current hour)
-                const pastNg = cacheService.getNgPastHours(machineName);
-                const pendingNg = autoNgCache.pendingPrevHour[machineName] || 0;
-                const currentHourNg = autoNgCache.data[machineName] || 0; // Fast Loop อัปเดตทุก 10s อยู่แล้ว
-                ngQty = pastNg + pendingNg + currentHourNg;
-                
-                quality = totalOutput > 0 ? ((totalOutput - ngQty) / totalOutput) * 100 : 0;
-                if (quality < 0) quality = 0;
-
-                oeeValue = (availability > 0 && performance > 0 && quality > 0)
-                    ? (availability / 100) * (performance / 100) * (quality / 100) * 100
-                    : 0;
-            } else {
-                quality = oeeData?.quality || 0;
-                ngQty = oeeData?.ng_qty || 0;
-                oeeValue = (availability > 0 && performance > 0 && quality > 0)
-                    ? (availability / 100) * (performance / 100) * (quality / 100) * 100
-                    : oeeData?.oee_value || 0;
-            }
-
-            let dailyPayload = {
-                availability: parseFloat(availability.toFixed(2)),
-                performance: parseFloat(performance.toFixed(2)),
-                ngQty,
-                oeeMode: mode,
-                // 🆕 [Phase 7] ส่ง hourly array กลับไปเพื่ออัปเดต Availability แกนขวา
+            const pastNg = cacheService.getNgPastHours(machineName);
+            const pendingNg = autoNgCache.pendingPrevHour[machineName] || 0;
+            const currentHourNg = autoNgCache.data[machineName] || 0;
+            const dailyPayload = buildAutoDailyPayload({
+                availability,
+                performance,
+                totalOutput,
+                ngQty: pastNg + pendingNg + currentHourNg,
                 hourly: {
                     availability: cacheService.getAvailability(machineName)
-                }
-            };
-
-            // ✅ For manual machines, prevent overwriting yesterday's OEE with today's incomplete OEE
-            dailyPayload.quality = parseFloat(quality.toFixed(2));
-            dailyPayload.oee = parseFloat(oeeValue.toFixed(2));
+                },
+            });
+            const ngQty = dailyPayload.ngQty;
+            const quality = dailyPayload.quality;
+            const oeeValue = dailyPayload.oee;
 
             // 🆕 ซิงค์ MQTT Memory กลับจาก DB ถ้า live_status ยังเป็น null
             // (กรณี backend เพิ่งรีสตาร์ท ยังไม่ได้รับ MQTT status_tb ครั้งแรก)
@@ -835,5 +839,8 @@ module.exports = {
     stopRealtimePolling,
     fastPollAndEmit,
     slowPollAndEmit,
+    __private: {
+        buildAutoDailyPayload,
+    },
     // (Removed export of pushRealtimeMcStatus)
 };

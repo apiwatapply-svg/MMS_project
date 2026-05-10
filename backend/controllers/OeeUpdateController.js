@@ -37,6 +37,29 @@ function buildRealtimeUpdatePayload(shiftDate, rows, mode = "auto") {
     };
 }
 
+function buildAutoListResults({ machines, oeeRecords, outputRecords, shiftDate }) {
+    const oeeMap = new Map(oeeRecords.map(o => [o.machine_name, o]));
+    const outputMap = new Map(outputRecords.map(o => [o.machine_name, o]));
+
+    return machines.map(machine => {
+        const oee = oeeMap.get(machine.machine_name);
+        const output = outputMap.get(machine.machine_name);
+        return {
+            machine_name: machine.machine_name,
+            machine_type: machine.machine_type,
+            machine_area: machine.machine_area,
+            oee_mode: "auto",
+            ng_qty: oee?.ng_qty || 0,
+            quality: oee?.quality || 0,
+            availability: oee?.availability || 0,
+            performance: oee?.performance || 0,
+            oee_value: oee?.oee_value || 0,
+            total_output: output?.Overall || 0,
+            display_date: shiftDate,
+        };
+    });
+}
+
 const controller = {
     list: async (req, res) => {
         try {
@@ -57,25 +80,11 @@ const controller = {
                 prisma.tb_oee.findMany({ where: { date: today } }),
                 prisma.tb_output_actual.findMany({ where: { date: today } }),
             ]);
-            const oeeMap = new Map(oeeRecords.map(o => [o.machine_name, o]));
-            const outputMap = new Map(outputRecords.map(o => [o.machine_name, o]));
-
-            const results = machines.map(machine => {
-                const oee = oeeMap.get(machine.machine_name);
-                const output = outputMap.get(machine.machine_name);
-                return {
-                    machine_name: machine.machine_name,
-                    machine_type: machine.machine_type,
-                    machine_area: machine.machine_area,
-                    oee_mode: "auto",
-                    ng_qty: oee?.ng_qty || 0,
-                    quality: oee?.quality || 0,
-                    availability: oee?.availability || 0,
-                    performance: oee?.performance || 0,
-                    oee_value: oee?.oee_value || 0,
-                    total_output: output?.Overall || 0,
-                    display_date: todayStr,
-                };
+            const results = buildAutoListResults({
+                machines,
+                oeeRecords,
+                outputRecords,
+                shiftDate: todayStr,
             });
 
             res.json({ results });
@@ -193,6 +202,7 @@ controller.__private = {
     parseDateToUtcMidnight,
     normalizeNgQty,
     buildRealtimeUpdatePayload,
+    buildAutoListResults,
 };
 
 module.exports = controller;
